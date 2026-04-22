@@ -53,6 +53,39 @@ const buildStatusText = (
   return `${chess.turn() === "w" ? "White" : "Black"} to move.`;
 };
 
+const buildGameNotification = (
+  chess: Chess,
+  gameStarted: boolean,
+  gameOverWinner: PlayerColor | null,
+) => {
+  if (!gameStarted) {
+    return null;
+  }
+
+  if (gameOverWinner || chess.isCheckmate()) {
+    const winner = gameOverWinner
+      ? formatPlayerColor(gameOverWinner)
+      : chess.turn() === "w"
+        ? "Black"
+        : "White";
+
+    return {
+      message: `Checkmate! ${winner} wins the game.`,
+      tone: "critical" as const,
+    };
+  }
+
+  if (chess.isCheck()) {
+    const kingUnderAttack = chess.turn() === "w" ? "White" : "Black";
+    return {
+      message: `Check on ${kingUnderAttack} king.`,
+      tone: "warning" as const,
+    };
+  }
+
+  return null;
+};
+
 export const Game = () => {
   const socket = useSocket();
   const [chess] = useState(() => new Chess());
@@ -151,6 +184,16 @@ export const Game = () => {
     : false;
 
   const statusText = buildStatusText(chess, gameStarted, gameOverWinner);
+  const gameNotification = buildGameNotification(
+    chess,
+    gameStarted,
+    gameOverWinner,
+  );
+  const startButtonText = startRequested
+    ? "Searching Opponent..."
+    : gameStarted && !gameOverWinner
+      ? "Start a New Game"
+      : "Start Match";
 
   if (!socket) {
     return (
@@ -198,13 +241,25 @@ export const Game = () => {
               className="rounded-lg border border-amber-200/70 bg-amber-100/10 px-5 py-3 text-sm font-semibold uppercase tracking-[0.15em] text-amber-100 transition hover:-translate-y-0.5 hover:bg-amber-100/20 disabled:cursor-not-allowed disabled:opacity-60"
               disabled={startRequested}
             >
-              {startRequested ? "Searching Opponent..." : "Start Match"}
+              {startButtonText}
             </button>
           </div>
         </header>
 
         <section className="grid gap-6 xl:grid-cols-[minmax(320px,1fr)_340px]">
           <div className="rounded-2xl border border-zinc-700/70 bg-black/70 p-4 shadow-2xl shadow-black/60 backdrop-blur-sm sm:p-6">
+            {gameNotification ? (
+              <div
+                className={`mb-4 rounded-lg border px-3 py-2 text-sm ${
+                  gameNotification.tone === "critical"
+                    ? "border-rose-400/60 bg-rose-500/15 text-rose-100"
+                    : "border-amber-300/60 bg-amber-500/15 text-amber-100"
+                }`}
+              >
+                {gameNotification.message}
+              </div>
+            ) : null}
+
             <div className="mb-4 grid gap-3 sm:grid-cols-3">
               <article className="rounded-xl border border-zinc-700/70 bg-zinc-900/80 p-3">
                 <p className="text-xs uppercase tracking-[0.25em] text-zinc-400">

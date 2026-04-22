@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 
 
-const WS_URL = import.meta.env.VITE_WS_URL || "ws://localhost:8080";
+const WS_URL = import.meta.env.ENV == "production" ? import.meta.env.VITE_WS_URL : "ws://localhost:8080/ws";
 
 export const useSocket = () => {
     const [socket, setSocket] = useState<WebSocket | null>(null);

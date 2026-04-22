@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+logs/
+*.log
+
+.env*
+
+.vscode/
+.idea/
+*.DS_Store
+
+coverage/
+.tmp/
+.cache/

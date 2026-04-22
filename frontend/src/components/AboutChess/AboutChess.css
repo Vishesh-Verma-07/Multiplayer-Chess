@@ -1,0 +1,77 @@
+.about-chess-image-panel {
+  animation: aboutReveal 800ms ease-out both;
+}
+
+.about-chess-king {
+  opacity: 0;
+  animation: aboutKingFadeIn 900ms ease-out 120ms both;
+}
+
+.about-chess-content {
+  animation: aboutReveal 800ms ease-out 160ms both;
+}
+
+.about-chess-eyebrow {
+  animation: aboutRise 650ms ease-out 220ms both;
+}
+
+.about-chess-title {
+  animation: aboutRise 700ms ease-out 300ms both;
+}
+
+.about-chess-description {
+  animation: aboutRise 700ms ease-out 380ms both;
+}
+
+.about-chess-item {
+  opacity: 0;
+  animation: aboutRise 620ms ease-out both;
+}
+
+@keyframes aboutReveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes aboutRise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes aboutKingFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-chess-image-panel,
+  .about-chess-king,
+  .about-chess-content,
+  .about-chess-eyebrow,
+  .about-chess-title,
+  .about-chess-description,
+  .about-chess-item {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}

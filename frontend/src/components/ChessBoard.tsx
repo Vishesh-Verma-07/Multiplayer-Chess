@@ -1,84 +1,164 @@
-import { Color, PieceSymbol, Square } from "chess.js";
-import { useState } from "react";
+import { Chess, Color, Move, PieceSymbol, Square } from "chess.js";
+import { Dispatch, SetStateAction, useMemo, useState } from "react";
 import { MOVE } from "../messages";
 
+type ChessBoardProps = {
+  setBoard: Dispatch<
+    SetStateAction<
+      ({
+        square: Square;
+        type: PieceSymbol;
+        color: Color;
+      } | null)[][]
+    >
+  >;
+  chess: Chess;
+  board: ({
+    square: Square;
+    type: PieceSymbol;
+    color: Color;
+  } | null)[][];
+  socket: WebSocket;
+  canMove: boolean;
+  onIllegalMove: (message: string) => void;
+};
 
+const fileLabels = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
-export const ChessBoard = ({chess, board, socket, setBoard } : {
-    setBoard: any;
-    chess: any;
-    board : ({
-            square: Square;
-            type: PieceSymbol;
-            color: Color;
-        } | null) [][];
-    socket : WebSocket;
-}) => {
+export const ChessBoard = ({
+  chess,
+  board,
+  socket,
+  setBoard,
+  canMove,
+  onIllegalMove,
+}: ChessBoardProps) => {
+  const [from, setFrom] = useState<Square | null>(null);
 
-    const [from, setFrom] = useState<Square | null>(null);
-    const [to, setTo] = useState<Square | null>(null);
+  const legalTargets = useMemo(() => {
+    if (!from) {
+      return [] as Square[];
+    }
 
+    const verboseMoves = chess.moves({ square: from, verbose: true }) as Move[];
+    return verboseMoves.map((move) => move.to as Square);
+  }, [chess, from, board]);
 
-    // const move = (from: Square, to: Square) => {
-    //     if(!from){
-    //         setFrom(square?.square ?? null);
-    //     }
-    //     else{
-    //         setTo(square?.square ?? null);
-    //         socket.send(JSON.stringify({
-    //             type: MOVE, 
-    //             payload: {
-    //                 from, 
-    //                 to
-    //             }
-    //         }))
-    //     }
-    // }
+  const handleSquareClick = (squareRepresentation: Square) => {
+    if (!canMove) {
+      onIllegalMove("Wait for your turn.");
+      return;
+    }
 
+    if (!from) {
+      const selectedPiece = chess.get(squareRepresentation);
+      if (!selectedPiece || selectedPiece.color !== chess.turn()) {
+        onIllegalMove("Select one of your own pieces.");
+        return;
+      }
+      setFrom(squareRepresentation);
+      onIllegalMove("");
+      return;
+    }
 
+    if (from === squareRepresentation) {
+      setFrom(null);
+      return;
+    }
 
+    if (!legalTargets.includes(squareRepresentation)) {
+      onIllegalMove("That piece cannot move to this square.");
+      return;
+    }
 
-    return <div className="text-black text-2xl ">
-        {board.map((row, i) => {
-            return <div key={i} className="flex">
-                {row.map((square, j) => {
-                    const squareRepresentation = String.fromCharCode(97 + j) + (8 - i) as Square;
-                    return <div onClick={() => {
+    const piece = chess.get(from);
+    const promotion =
+      piece?.type === "p" &&
+      ((piece.color === "w" && squareRepresentation[1] === "8") ||
+        (piece.color === "b" && squareRepresentation[1] === "1"))
+        ? "q"
+        : undefined;
 
-                        if(!from){
-                            setFrom(squareRepresentation);
-                        }
-                        else{
-                            // setTo(square?.square ?? null);
-                            socket.send(JSON.stringify({
-                                type: MOVE, 
-                                payload: {
-                                    move:{
-                                        from, 
-                                        to: squareRepresentation
-                                    }
-                                }
-                            }))
-                            setFrom(null)
-                            chess.move({
-                                from, 
-                                to: squareRepresentation
-                            });
-                            setBoard(chess.board());
-                            console.log({
-                                from,
-                                to: squareRepresentation
-                            })
-                        }
-                    }} key={j} className={`w-16 h-16 ${(i + j) % 2 == 0 ? 'bg-green-600' : 'bg-orange-100'}`}>
-                        <div className="w-full h-full flex justify-center">
-                            <div className="h-full flex justify-center flex-col">
-                                {square ? <img className="w-14 h-14" src={`/${square?.color === "b" ? `b${square?.type}` : `w${square?.type}`}.png`} /> : null}
-                            </div>
-                        </div>
-                    </div>
-                })}
-            </div>
-        })}
+    const movePayload = {
+      from,
+      to: squareRepresentation,
+      ...(promotion ? { promotion } : {}),
+    };
+
+    const result = chess.move(movePayload);
+
+    if (!result) {
+      onIllegalMove("Illegal move.");
+      return;
+    }
+
+    socket.send(
+      JSON.stringify({
+        type: MOVE,
+        payload: {
+          move: movePayload,
+        },
+      }),
+    );
+
+    setBoard(chess.board());
+    setFrom(null);
+    onIllegalMove("");
+  };
+
+  return (
+    <div className="w-full max-w-[560px]">
+      <div className="rounded-2xl border border-amber-200/30 bg-black/45 p-3 shadow-xl shadow-black/70">
+        {board.map((row, i) => (
+          <div key={i} className="flex">
+            {row.map((square, j) => {
+              const squareRepresentation =
+                `${String.fromCharCode(97 + j)}${8 - i}` as Square;
+              const isSelected = from === squareRepresentation;
+              const isTarget = legalTargets.includes(squareRepresentation);
+              const isDark = (i + j) % 2 === 0;
+
+              return (
+                <button
+                  type="button"
+                  onClick={() => handleSquareClick(squareRepresentation)}
+                  key={j}
+                  className={`relative h-12 w-12 sm:h-14 sm:w-14 md:h-16 md:w-16 ${
+                    isDark ? "bg-[#6f4e2b]" : "bg-[#f3e4c6]"
+                  } ${isSelected ? "ring-2 ring-amber-300 ring-inset" : ""}`}
+                >
+                  {isTarget ? (
+                    <span className="pointer-events-none absolute inset-0 m-auto h-3 w-3 rounded-full bg-amber-500/85" />
+                  ) : null}
+
+                  {i === 7 ? (
+                    <span className="pointer-events-none absolute bottom-1 right-1 text-[10px] font-semibold text-zinc-800/80">
+                      {fileLabels[j]}
+                    </span>
+                  ) : null}
+
+                  {j === 0 ? (
+                    <span className="pointer-events-none absolute left-1 top-1 text-[10px] font-semibold text-zinc-800/80">
+                      {8 - i}
+                    </span>
+                  ) : null}
+
+                  <div className="flex h-full w-full items-center justify-center">
+                    {square ? (
+                      <img
+                        className="h-10 w-10 select-none sm:h-12 sm:w-12 md:h-14 md:w-14"
+                        draggable={false}
+                        src={`/${square.color === "b" ? `b${square.type}` : `w${square.type}`}.png`}
+                        alt={`${square.color}-${square.type}`}
+                      />
+                    ) : null}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ))}
+      </div>
     </div>
-}
+  );
+};

@@ -303,6 +303,7 @@ export const Game = () => {
                 board={board}
                 canMove={gameStarted && !gameOverWinner && isMyTurn}
                 onIllegalMove={(message) => setLastError(message)}
+                orientation={playerColor ?? "white"}
               />
             </div>
           </div>

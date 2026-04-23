@@ -21,9 +21,8 @@ type ChessBoardProps = {
   socket: WebSocket;
   canMove: boolean;
   onIllegalMove: (message: string) => void;
+  orientation?: "white" | "black";
 };
-
-const fileLabels = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
 export const ChessBoard = ({
   chess,
@@ -32,6 +31,7 @@ export const ChessBoard = ({
   setBoard,
   canMove,
   onIllegalMove,
+  orientation = "white",
 }: ChessBoardProps) => {
   const [from, setFrom] = useState<Square | null>(null);
 
@@ -109,11 +109,14 @@ export const ChessBoard = ({
   return (
     <div className="w-full max-w-[560px]">
       <div className="rounded-2xl border border-amber-200/30 bg-black/45 p-3 shadow-xl shadow-black/70">
-        {board.map((row, i) => (
+        {Array.from({ length: 8 }, (_, i) => (
           <div key={i} className="flex">
-            {row.map((square, j) => {
+            {Array.from({ length: 8 }, (_, j) => {
+              const boardRow = orientation === "white" ? i : 7 - i;
+              const boardCol = orientation === "white" ? j : 7 - j;
+              const square = board[boardRow][boardCol];
               const squareRepresentation =
-                `${String.fromCharCode(97 + j)}${8 - i}` as Square;
+                `${String.fromCharCode(97 + boardCol)}${8 - boardRow}` as Square;
               const isSelected = from === squareRepresentation;
               const isTarget = legalTargets.includes(squareRepresentation);
               const isDark = (i + j) % 2 === 0;
@@ -133,13 +136,13 @@ export const ChessBoard = ({
 
                   {i === 7 ? (
                     <span className="pointer-events-none absolute bottom-1 right-1 text-[10px] font-semibold text-zinc-800/80">
-                      {fileLabels[j]}
+                      {squareRepresentation[0]}
                     </span>
                   ) : null}
 
                   {j === 0 ? (
                     <span className="pointer-events-none absolute left-1 top-1 text-[10px] font-semibold text-zinc-800/80">
-                      {8 - i}
+                      {squareRepresentation[1]}
                     </span>
                   ) : null}
 

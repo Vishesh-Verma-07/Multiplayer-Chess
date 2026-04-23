@@ -1,6 +1,7 @@
 import { Chess } from "chess.js";
 import { useEffect, useMemo, useState } from "react";
 import { ChessBoard } from "../components/ChessBoard";
+import { useMoveSound } from "../hooks/useMoveSound";
 import { useSocket } from "../hooks/useSocket";
 import { GAME_OVER, INIT_GAME, INVALID_MOVE, MOVE } from "../messages";
 
@@ -88,6 +89,7 @@ const buildGameNotification = (
 
 export const Game = () => {
   const socket = useSocket();
+  const { playMoveSound } = useMoveSound();
   const [chess] = useState(() => new Chess());
   const [board, setBoard] = useState(chess.board());
   const [playerColor, setPlayerColor] = useState<PlayerColor | null>(null);
@@ -139,6 +141,7 @@ export const Game = () => {
           if (executedMove) {
             setBoard(chess.board());
             setLastError(null);
+            playMoveSound();
           }
           break;
         }
@@ -160,7 +163,7 @@ export const Game = () => {
           break;
       }
     };
-  }, [socket, chess]);
+  }, [socket, chess, playMoveSound]);
 
   const moveHistory = useMemo(() => chess.history(), [board, chess]);
 
@@ -304,6 +307,7 @@ export const Game = () => {
                 canMove={gameStarted && !gameOverWinner && isMyTurn}
                 onIllegalMove={(message) => setLastError(message)}
                 orientation={playerColor ?? "white"}
+                onMoveExecuted={playMoveSound}
               />
             </div>
           </div>

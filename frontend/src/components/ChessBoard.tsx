@@ -22,6 +22,7 @@ type ChessBoardProps = {
   canMove: boolean;
   onIllegalMove: (message: string) => void;
   orientation?: "white" | "black";
+  onMoveExecuted?: () => void;
 };
 
 export const ChessBoard = ({
@@ -32,6 +33,7 @@ export const ChessBoard = ({
   canMove,
   onIllegalMove,
   orientation = "white",
+  onMoveExecuted,
 }: ChessBoardProps) => {
   const [from, setFrom] = useState<Square | null>(null);
 
@@ -104,6 +106,7 @@ export const ChessBoard = ({
     setBoard(chess.board());
     setFrom(null);
     onIllegalMove("");
+    onMoveExecuted?.();
   };
 
   return (

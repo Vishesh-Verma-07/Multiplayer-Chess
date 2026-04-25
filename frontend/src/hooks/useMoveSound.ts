@@ -24,7 +24,6 @@ export function useMoveSound() {
    * Track scheduled node stop times so we can defer context suspension
    * until the full sound (including delay tail) has finished.
    */
-  const tailEndRef = useRef(0);
   const suspendTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Clean up on unmount

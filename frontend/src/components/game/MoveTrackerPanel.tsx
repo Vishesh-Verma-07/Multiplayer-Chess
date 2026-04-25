@@ -28,7 +28,7 @@ export const MoveTrackerPanel = ({
         Live status, captured pieces, and full SAN move history.
       </p>
 
-      <div className="mt-3 grid grid-cols-3 gap-2 xl:grid-cols-1 xl:gap-2">
+      <div className="mt-3 grid grid-cols-3 gap-2  xl:gap-2">
         <GameStatCard label="You Play" value={playerLabel} />
         <GameStatCard label="Turn" value={currentTurnLabel} />
         <GameStatCard label="Moves" value={moveCount} />

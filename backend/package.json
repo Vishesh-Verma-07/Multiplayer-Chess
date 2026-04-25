@@ -12,8 +12,11 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/ws": "^8.18.0",
     "chess.js": "^1.1.0",
+    "dotenv": "^17.4.2",
+    "jsonwebtoken": "^9.0.3",
     "typescript": "^5.8.2",
     "ws": "^8.18.1"
   },

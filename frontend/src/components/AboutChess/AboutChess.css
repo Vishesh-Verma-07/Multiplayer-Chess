@@ -1,77 +1,228 @@
-.about-chess-image-panel {
-  animation: aboutReveal 800ms ease-out both;
+.about-section {
+  position: relative;
+  background-color: var(--bg-dark);
+  color: var(--text-primary);
+  padding: 100px 0;
+  overflow: hidden;
 }
 
-.about-chess-king {
+.about-bg-gradient {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 18% 14%, rgba(212,212,216,0.05) 0%, transparent 35%),
+              radial-gradient(circle at 88% 76%, rgba(113,113,122,0.05) 0%, transparent 38%);
+  pointer-events: none;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  background: linear-gradient(135deg, rgba(20,20,20,0.8) 0%, rgba(10,10,10,0.9) 48%, rgba(26,26,26,0.8) 100%);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 24px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 0; /* for observer */
+  transform: translateY(40px); /* for observer */
+  transition: opacity 1s ease-out, transform 1s ease-out;
+}
+
+.about-grid.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (min-width: 900px) {
+  .about-grid {
+    grid-template-columns: 1fr 1fr;
+    min-height: 580px;
+  }
+}
+
+.about-divider-h {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 360px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(161, 161, 170, 0.15), transparent);
+  pointer-events: none;
+}
+
+.about-divider-v {
+  display: none;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, transparent, rgba(161, 161, 170, 0.15), transparent);
+  pointer-events: none;
+}
+
+@media (min-width: 900px) {
+  .about-divider-h { display: none; }
+  .about-divider-v { display: block; }
+}
+
+.about-image-panel {
+  position: relative;
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1200px;
+}
+
+@media (min-width: 900px) {
+  .about-image-panel {
+    min-height: 580px;
+  }
+}
+
+.about-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 0%, rgba(5,5,5,0.8) 100%);
+  z-index: 1;
+}
+
+@keyframes slowFloat {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0px); }
+}
+
+.about-image-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 80%;
+  height: 80%;
+  transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+  animation: slowFloat 6s ease-in-out infinite;
+}
+
+.about-image-panel:hover .about-image-wrapper {
+  transform: rotateY(15deg) rotateX(10deg) scale(1.1);
+  animation-play-state: paused;
+}
+
+.about-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 25px 35px rgba(0,0,0,0.8));
+  mix-blend-mode: lighten;
+  mask-image: radial-gradient(ellipse at center, black 50%, transparent 90%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 50%, transparent 90%);
+}
+
+.about-content-panel {
+  padding: 48px 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@media (min-width: 900px) {
+  .about-content-panel {
+    padding: 80px 56px;
+  }
+}
+
+.about-eyebrow {
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  color: var(--text-accent);
+  margin-bottom: 20px;
+  display: inline-block;
+}
+
+.about-title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 6vw, 4.5rem);
+  line-height: 0.9;
+  letter-spacing: 0.08em;
+  margin: 0 0 24px 0;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.about-description {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: 40px;
+}
+
+.about-features {
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 32px;
+}
+
+.about-subtitle {
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  letter-spacing: 0.1em;
+  margin: 0 0 24px 0;
+  color: #fff;
+}
+
+.about-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 40px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.about-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: #e4e4e7;
   opacity: 0;
-  animation: aboutKingFadeIn 900ms ease-out 120ms both;
+  transform: translateX(-20px);
 }
 
-.about-chess-content {
-  animation: aboutReveal 800ms ease-out 160ms both;
+.about-grid.is-visible .about-item {
+  opacity: 1;
+  transform: translateX(0);
 }
 
-.about-chess-eyebrow {
-  animation: aboutRise 650ms ease-out 220ms both;
+.about-grid.is-visible .about-item:nth-child(1) { transition-delay: 0.2s; }
+.about-grid.is-visible .about-item:nth-child(2) { transition-delay: 0.4s; }
+.about-grid.is-visible .about-item:nth-child(3) { transition-delay: 0.6s; }
+
+.about-item:hover {
+  background: rgba(251, 191, 36, 0.05);
+  border-color: var(--border-focus);
+  transform: translateX(8px) scale(1.02);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
 }
 
-.about-chess-title {
-  animation: aboutRise 700ms ease-out 300ms both;
-}
-
-.about-chess-description {
-  animation: aboutRise 700ms ease-out 380ms both;
-}
-
-.about-chess-item {
-  opacity: 0;
-  animation: aboutRise 620ms ease-out both;
-}
-
-@keyframes aboutReveal {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes aboutRise {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes aboutKingFadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .about-chess-image-panel,
-  .about-chess-king,
-  .about-chess-content,
-  .about-chess-eyebrow,
-  .about-chess-title,
-  .about-chess-description,
-  .about-chess-item {
-    animation: none;
-    opacity: 1;
-    transform: none;
-  }
+.about-item-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--accent-gold);
+  box-shadow: 0 0 12px var(--accent-gold);
+  flex-shrink: 0;
 }

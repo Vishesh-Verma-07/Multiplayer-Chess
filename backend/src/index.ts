@@ -1,5 +1,7 @@
+import "dotenv/config";
 import { createServer } from "http";
 import { WebSocket, WebSocketServer } from "ws";
+import { verifyAuthToken } from "./auth";
 import { GameManager } from "./GameManager";
 
 const PORT = 8080;
@@ -27,9 +29,16 @@ const aliveWss = new WebSocketServer({ noServer: true });
 const gameManager = new GameManager();
 
 gameWss.on("connection", function connection(ws) {
-  gameManager.addUser(ws);
+  const socket = ws as Parameters<GameManager["addUser"]>[0];
 
-  ws.on("close", () => gameManager.removerUser(ws));
+  if (!socket.user) {
+    ws.close(1008, "Authentication required");
+    return;
+  }
+
+  gameManager.addUser(socket);
+
+  ws.on("close", () => gameManager.removerUser(socket));
 });
 
 aliveWss.on("connection", (ws) => {
@@ -62,7 +71,8 @@ aliveWss.on("connection", (ws) => {
 
 server.on("upgrade", (req, socket, head) => {
   const host = req.headers.host ?? `localhost:${PORT}`;
-  const { pathname } = new URL(req.url ?? "/", `http://${host}`);
+  const parsedUrl = new URL(req.url ?? "/", `http://${host}`);
+  const { pathname } = parsedUrl;
 
   if (pathname === "/ws/alive") {
     aliveWss.handleUpgrade(req, socket, head, (ws) => {
@@ -72,7 +82,26 @@ server.on("upgrade", (req, socket, head) => {
   }
 
   if (pathname === "/" || pathname === "/ws" || pathname === "/ws/game") {
+    const token = parsedUrl.searchParams.get("token");
+    if (!token) {
+      socket.write(
+        "HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\n\r\n",
+      );
+      socket.destroy();
+      return;
+    }
+
+    const authUser = verifyAuthToken(token);
+    if (!authUser) {
+      socket.write(
+        "HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\n\r\n",
+      );
+      socket.destroy();
+      return;
+    }
+
     gameWss.handleUpgrade(req, socket, head, (ws) => {
+      (ws as Parameters<GameManager["addUser"]>[0]).user = authUser;
       gameWss.emit("connection", ws, req);
     });
     return;

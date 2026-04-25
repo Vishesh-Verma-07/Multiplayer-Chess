@@ -1,5 +1,7 @@
 import { Chess, Move } from "chess.js";
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 import { ChessBoard } from "../components/ChessBoard";
 import { ConnectionState } from "../components/game/ConnectionState";
 import { GameHeader } from "../components/game/GameHeader";
@@ -34,7 +36,9 @@ type IncomingMessage = {
 };
 
 export const Game = () => {
-  const socket = useSocket();
+  const { token, user, logout } = useAuth();
+  const navigate = useNavigate();
+  const socket = useSocket(token);
   const { playMoveSound } = useMoveSound();
   const [chess] = useState(() => new Chess());
   const [board, setBoard] = useState(chess.board());
@@ -148,6 +152,25 @@ export const Game = () => {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_20%_20%,rgba(251,191,36,0.15),transparent_44%),radial-gradient(circle_at_80%_70%,rgba(147,51,234,0.1),transparent_48%),linear-gradient(180deg,#0a0a0a_0%,#090909_100%)] px-4 py-8 text-zinc-100 sm:px-6 lg:px-10">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-zinc-700/70 bg-black/60 px-4 py-3 text-sm text-zinc-200">
+          <p>
+            Signed in as{" "}
+            <span className="font-semibold text-amber-200">
+              {user?.username}
+            </span>
+          </p>
+          <button
+            type="button"
+            onClick={async () => {
+              await logout();
+              navigate("/auth", { replace: true });
+            }}
+            className="rounded-md border border-zinc-500 px-3 py-1.5 uppercase tracking-[0.12em] transition hover:border-zinc-300 hover:text-white"
+          >
+            Logout
+          </button>
+        </div>
+
         <GameHeader
           statusText={statusText}
           startButtonText={startButtonText}

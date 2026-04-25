@@ -1,29 +1,35 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState } from "react";
 
+const WS_URL = import.meta.env.VITE_WEBSOCKET_BACKEND_URL;
 
-const WS_URL =  import.meta.env.VITE_WEBSOCKET_BACKEND_URL;
+export const useSocket = (token: string | null) => {
+  const [socket, setSocket] = useState<WebSocket | null>(null);
 
-export const useSocket = () => {
-    const [socket, setSocket] = useState<WebSocket | null>(null);
+  useEffect(() => {
+    if (!token) {
+      setSocket(null);
+      return;
+    }
 
-    useEffect(() => {
-        console.log("trying to connect to the url", WS_URL);
-        const ws = new WebSocket(WS_URL);
-        console.log("socket created is ", ws)
+    console.log("trying to connect to the url", WS_URL);
+    const url = new URL(WS_URL);
+    url.searchParams.set("token", token);
 
-        ws.onopen = () => {
-            setSocket(ws);
-        }
+    const ws = new WebSocket(url.toString());
+    console.log("socket created is ", ws);
 
-        ws.onclose = () => {
-            setSocket(null);
-        }
+    ws.onopen = () => {
+      setSocket(ws);
+    };
 
-        return () => {
-            ws.close();
-        }
-    }, [])
+    ws.onclose = () => {
+      setSocket(null);
+    };
 
+    return () => {
+      ws.close();
+    };
+  }, [token]);
 
-    return socket;
-}
+  return socket;
+};

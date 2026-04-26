@@ -1,6 +1,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import "./Auth.css";
 
 type AuthMode = "login" | "register";
 
@@ -47,41 +48,35 @@ export const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_15%_10%,rgba(14,165,233,0.2),transparent_38%),radial-gradient(circle_at_80%_75%,rgba(245,158,11,0.2),transparent_44%),linear-gradient(160deg,#020617_0%,#111827_100%)] px-4 py-10 text-zinc-100 sm:px-6">
-      <div className="mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-[1fr_420px]">
-        <section className="rounded-2xl border border-sky-200/20 bg-slate-900/40 p-8 shadow-2xl shadow-black/40 backdrop-blur-sm">
-          <p className="text-xs uppercase tracking-[0.35em] text-sky-200/80">
+    <div className="auth-page">
+      <div className="auth-bg-gradient" />
+      <div className="auth-container">
+        <section className="auth-info-panel">
+          <p className="auth-eyebrow">
             Authentication
           </p>
-          <h1 className="mt-4 font-['Bebas_Neue',sans-serif] text-5xl tracking-[0.08em] text-sky-50 sm:text-6xl">
+          <h1 className="auth-title">
             Enter The Matchroom
           </h1>
-          <p className="mt-4 max-w-xl text-zinc-300">
+          <p className="auth-description">
             Create your player identity to unlock multiplayer games and secure
             websocket sessions.
           </p>
-          <ul className="mt-8 space-y-3 text-sm text-zinc-200">
+          <ul className="auth-features">
             <li>Secure JWT session tied to your account.</li>
             <li>Login with email or username.</li>
             <li>Fast onboarding and immediate game access.</li>
           </ul>
-          <Link
-            to="/"
-            className="mt-8 inline-flex rounded-md border border-zinc-500/60 px-5 py-2 text-sm font-semibold tracking-wide text-zinc-100 transition hover:border-zinc-300 hover:text-white"
-          >
+          <Link to="/" className="auth-back-link">
             Back To Home
           </Link>
         </section>
 
-        <section className="rounded-2xl border border-zinc-600/60 bg-black/65 p-6 shadow-2xl shadow-black/60 backdrop-blur-md sm:p-8">
-          <div className="mb-6 grid grid-cols-2 gap-2 rounded-lg bg-zinc-800/70 p-1">
+        <section className="auth-form-panel">
+          <div className="auth-tabs">
             <button
               type="button"
-              className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
-                mode === "login"
-                  ? "bg-sky-400 text-slate-950"
-                  : "text-zinc-200 hover:bg-zinc-700"
-              }`}
+              className={`auth-tab-btn ${mode === "login" ? "active" : ""}`}
               onClick={() => {
                 setMode("login");
                 setError(null);
@@ -91,11 +86,7 @@ export const Auth = () => {
             </button>
             <button
               type="button"
-              className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
-                mode === "register"
-                  ? "bg-amber-300 text-slate-950"
-                  : "text-zinc-200 hover:bg-zinc-700"
-              }`}
+              className={`auth-tab-btn ${mode === "register" ? "active" : ""}`}
               onClick={() => {
                 setMode("register");
                 setError(null);
@@ -105,11 +96,11 @@ export const Auth = () => {
             </button>
           </div>
 
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form onSubmit={onSubmit} className="auth-form">
             {mode === "register" ? (
               <>
-                <label className="block">
-                  <span className="mb-1 block text-sm font-medium text-zinc-200">
+                <label className="auth-input-group">
+                  <span className="auth-label">
                     Username
                   </span>
                   <input
@@ -118,12 +109,12 @@ export const Auth = () => {
                     maxLength={20}
                     value={username}
                     onChange={(event) => setUsername(event.target.value)}
-                    className="w-full rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-zinc-100 outline-none ring-0 transition focus:border-sky-300"
+                    className="auth-input"
                     placeholder="KnightRider"
                   />
                 </label>
-                <label className="block">
-                  <span className="mb-1 block text-sm font-medium text-zinc-200">
+                <label className="auth-input-group">
+                  <span className="auth-label">
                     Email
                   </span>
                   <input
@@ -131,28 +122,28 @@ export const Auth = () => {
                     type="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    className="w-full rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-zinc-100 outline-none ring-0 transition focus:border-sky-300"
+                    className="auth-input"
                     placeholder="you@example.com"
                   />
                 </label>
               </>
             ) : (
-              <label className="block">
-                <span className="mb-1 block text-sm font-medium text-zinc-200">
+              <label className="auth-input-group">
+                <span className="auth-label">
                   Email or Username
                 </span>
                 <input
                   required
                   value={identifier}
                   onChange={(event) => setIdentifier(event.target.value)}
-                  className="w-full rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-zinc-100 outline-none ring-0 transition focus:border-sky-300"
+                  className="auth-input"
                   placeholder="you@example.com"
                 />
               </label>
             )}
 
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium text-zinc-200">
+            <label className="auth-input-group">
+              <span className="auth-label">
                 Password
               </span>
               <input
@@ -162,13 +153,13 @@ export const Auth = () => {
                 maxLength={72}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="w-full rounded-md border border-zinc-600 bg-zinc-900 px-3 py-2 text-zinc-100 outline-none ring-0 transition focus:border-sky-300"
+                className="auth-input"
                 placeholder="********"
               />
             </label>
 
             {error ? (
-              <div className="rounded-md border border-rose-400/60 bg-rose-500/10 px-3 py-2 text-sm text-rose-100">
+              <div className="auth-error">
                 {error}
               </div>
             ) : null}
@@ -176,7 +167,7 @@ export const Auth = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-md bg-sky-300 px-4 py-2.5 text-sm font-bold uppercase tracking-[0.16em] text-slate-950 transition hover:bg-sky-200 disabled:cursor-not-allowed disabled:opacity-60"
+              className="auth-submit-btn"
             >
               {submitting
                 ? "Please wait..."

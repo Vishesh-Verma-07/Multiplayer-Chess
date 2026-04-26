@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum GameStatus {
+  PENDING
+  ACTIVE
+  FINISHED
+  ABANDONED
+}
+
+enum GameResult {
+  WHITE_WIN
+  BLACK_WIN
+  DRAW
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  whiteGames   ChessGame[] @relation("WhitePlayerGames")
+  blackGames   ChessGame[] @relation("BlackPlayerGames")
+  wonGames     ChessGame[] @relation("WinnerGames")
+  moves        ChessMove[]
+}
+
+model ChessGame {
+  id             String      @id @default(cuid())
+  status         GameStatus  @default(PENDING)
+  result         GameResult?
+  whitePlayerId  String?
+  blackPlayerId  String?
+  winnerId       String?
+  initialFen     String      @default("startpos")
+  currentFen     String      @default("startpos")
+  pgn            String?
+  movesCount     Int         @default(0)
+  lastMoveAt     DateTime?
+  startedAt      DateTime?
+  endedAt        DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  whitePlayer    User?              @relation("WhitePlayerGames", fields: [whitePlayerId], references: [id])
+  blackPlayer    User?              @relation("BlackPlayerGames", fields: [blackPlayerId], references: [id])
+  winner         User?              @relation("WinnerGames", fields: [winnerId], references: [id])
+  moves          ChessMove[]
+  boardSnapshots ChessBoardSnapshot[]
+
+  @@index([status])
+  @@index([whitePlayerId])
+  @@index([blackPlayerId])
+  @@index([winnerId])
+}
+
+model ChessMove {
+  id         String    @id @default(cuid())
+  gameId     String
+  playerId   String?
+  ply        Int
+  fromSquare String
+  toSquare   String
+  promotion  String?
+  san        String?
+  fenAfter   String
+  createdAt  DateTime  @default(now())
+
+  game       ChessGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  player     User?     @relation(fields: [playerId], references: [id])
+
+  @@unique([gameId, ply])
+  @@index([playerId])
+}
+
+model ChessBoardSnapshot {
+  id          String    @id @default(cuid())
+  gameId      String
+  fen         String
+  boardState  Json?
+  moveNumber  Int
+  sideToMove  String
+  createdAt   DateTime  @default(now())
+
+  game        ChessGame @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([gameId, moveNumber])
+}

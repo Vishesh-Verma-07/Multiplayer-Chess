@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 const WS_URL = import.meta.env.VITE_WEBSOCKET_BACKEND_URL;
+const RECONNECT_DELAY_MS = 1500;
 
 export const useSocket = (token: string | null) => {
   const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -11,23 +12,65 @@ export const useSocket = (token: string | null) => {
       return;
     }
 
-    console.log("trying to connect to the url", WS_URL);
-    const url = new URL(WS_URL);
-    url.searchParams.set("token", token);
+    let isActive = true;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let currentSocket: WebSocket | null = null;
 
-    const ws = new WebSocket(url.toString());
-    console.log("socket created is ", ws);
+    const connect = () => {
+      if (!isActive) {
+        return;
+      }
 
-    ws.onopen = () => {
-      setSocket(ws);
+      const url = new URL(WS_URL);
+      url.searchParams.set("token", token);
+
+      const ws = new WebSocket(url.toString());
+      currentSocket = ws;
+
+      ws.onopen = () => {
+        if (!isActive) {
+          ws.close();
+          return;
+        }
+
+        setSocket(ws);
+      };
+
+      ws.onclose = () => {
+        if (currentSocket === ws) {
+          currentSocket = null;
+        }
+
+        setSocket((prev) => (prev === ws ? null : prev));
+
+        if (!isActive) {
+          return;
+        }
+
+        reconnectTimer = setTimeout(() => {
+          connect();
+        }, RECONNECT_DELAY_MS);
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
     };
 
-    ws.onclose = () => {
-      setSocket(null);
-    };
+    connect();
 
     return () => {
-      ws.close();
+      isActive = false;
+
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
+
+      if (currentSocket) {
+        currentSocket.close();
+      }
+
+      setSocket(null);
     };
   }, [token]);
 

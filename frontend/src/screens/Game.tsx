@@ -23,8 +23,10 @@ type IncomingMessage = {
   type: string;
   payload?: {
     color?: PlayerColor;
-    winner?: PlayerColor;
+    winner?: PlayerColor | null;
     message?: string;
+    fen?: string;
+    resumed?: boolean;
     from?: string;
     to?: string;
     move?: {
@@ -60,13 +62,21 @@ export const Game = () => {
 
       switch (message.type) {
         case INIT_GAME: {
-          chess.reset();
+          const fen = message.payload?.fen;
+          const resumed = Boolean(message.payload?.resumed);
+
+          if (fen) {
+            chess.load(fen);
+          } else {
+            chess.reset();
+          }
+
           setBoard(chess.board());
           setPlayerColor(message.payload?.color ?? null);
           setGameStarted(true);
           setStartRequested(false);
           setGameOverWinner(null);
-          setLastError(null);
+          setLastError(resumed ? "Reconnected to active match." : null);
           break;
         }
 

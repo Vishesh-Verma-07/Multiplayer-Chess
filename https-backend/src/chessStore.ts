@@ -1,5 +1,5 @@
-import { prisma } from "./prisma.js";
 import { GameResult, GameStatus, Prisma } from "@prisma/client";
+import { prisma } from "./prisma.js";
 
 type CreateGameInput = {
   whitePlayerId?: string;
@@ -32,6 +32,14 @@ type FinishGameInput = {
   winnerId?: string;
   pgn?: string;
   finalFen: string;
+};
+
+export type ActiveGameForUser = {
+  gameId: string;
+  whitePlayerId: string | null;
+  blackPlayerId: string | null;
+  currentFen: string;
+  movesCount: number;
 };
 
 export const createChessGame = async ({
@@ -96,16 +104,28 @@ export const saveBoardSnapshot = async ({
   sideToMove,
   boardState,
 }: SaveBoardSnapshotInput) => {
-  return prisma.chessBoardSnapshot.create({
-    data: {
-      gameId,
-      fen,
-      moveNumber,
-      sideToMove,
-      ...(boardState !== undefined && boardState !== null
-        ? { boardState: boardState as Prisma.InputJsonValue }
-        : {}),
-    },
+  return prisma.$transaction(async (tx) => {
+    await tx.chessBoardSnapshot.create({
+      data: {
+        gameId,
+        fen,
+        moveNumber,
+        sideToMove,
+        ...(boardState !== undefined && boardState !== null
+          ? { boardState: boardState as Prisma.InputJsonValue }
+          : {}),
+      },
+    });
+
+    return tx.chessGame.update({
+      where: { id: gameId },
+      data: {
+        currentFen: fen,
+        movesCount: moveNumber,
+        ...(moveNumber > 0 ? { lastMoveAt: new Date() } : {}),
+        updatedAt: new Date(),
+      },
+    });
   });
 };
 
@@ -128,4 +148,37 @@ export const finishChessGame = async ({
       updatedAt: new Date(),
     },
   });
+};
+
+export const getActiveGameForUser = async (
+  userId: string,
+): Promise<ActiveGameForUser | null> => {
+  const game = await prisma.chessGame.findFirst({
+    where: {
+      status: GameStatus.ACTIVE,
+      OR: [{ whitePlayerId: userId }, { blackPlayerId: userId }],
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+    select: {
+      id: true,
+      whitePlayerId: true,
+      blackPlayerId: true,
+      currentFen: true,
+      movesCount: true,
+    },
+  });
+
+  if (!game) {
+    return null;
+  }
+
+  return {
+    gameId: game.id,
+    whitePlayerId: game.whitePlayerId,
+    blackPlayerId: game.blackPlayerId,
+    currentFen: game.currentFen,
+    movesCount: game.movesCount,
+  };
 };

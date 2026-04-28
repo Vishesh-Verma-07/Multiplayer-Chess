@@ -1,7 +1,4 @@
-type GameStatCardProps = {
-  label: string;
-  value: string | number;
-};
+import type { GameStatCardProps } from "./types";
 
 export const GameStatCard = ({ label, value }: GameStatCardProps) => {
   return (

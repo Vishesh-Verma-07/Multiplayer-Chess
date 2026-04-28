@@ -1,29 +1,7 @@
-import { Chess, Color, Move, PieceSymbol, Square } from "chess.js";
-import { Dispatch, SetStateAction, useMemo, useState } from "react";
+import { Move, Square } from "chess.js";
+import { useMemo, useState } from "react";
 import { MOVE } from "../messages";
-
-type ChessBoardProps = {
-  setBoard: Dispatch<
-    SetStateAction<
-      ({
-        square: Square;
-        type: PieceSymbol;
-        color: Color;
-      } | null)[][]
-    >
-  >;
-  chess: Chess;
-  board: ({
-    square: Square;
-    type: PieceSymbol;
-    color: Color;
-  } | null)[][];
-  socket: WebSocket;
-  canMove: boolean;
-  onIllegalMove: (message: string) => void;
-  orientation?: "white" | "black";
-  onMoveExecuted?: () => void;
-};
+import type { ChessBoardProps } from "./ChessBoard.types";
 
 export const ChessBoard = ({
   chess,

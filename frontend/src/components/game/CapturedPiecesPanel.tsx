@@ -1,5 +1,5 @@
 import { PieceSymbol } from "chess.js";
-import { CapturedPieces } from "./types";
+import type { CapturedPiecesPanelProps, CapturedPiecesRowProps } from "./types";
 
 const pieceNameBySymbol: Record<PieceSymbol, string> = {
   k: "king",
@@ -8,13 +8,6 @@ const pieceNameBySymbol: Record<PieceSymbol, string> = {
   b: "bishop",
   n: "knight",
   p: "pawn",
-};
-
-type CapturedPiecesRowProps = {
-  title: string;
-  capturedPieces: PieceSymbol[];
-  capturedSidePrefix: "w" | "b";
-  capturedSideName: "white" | "black";
 };
 
 const CapturedPiecesRow = ({
@@ -45,10 +38,6 @@ const CapturedPiecesRow = ({
       )}
     </article>
   );
-};
-
-type CapturedPiecesPanelProps = {
-  capturedPieces: CapturedPieces;
 };
 
 export const CapturedPiecesPanel = ({

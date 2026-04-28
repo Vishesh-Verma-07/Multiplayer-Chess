@@ -2,8 +2,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import "./Auth.css";
-
-type AuthMode = "login" | "register";
+import { AuthMode } from "./types";
 
 export const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -52,12 +51,8 @@ export const Auth = () => {
       <div className="auth-bg-gradient" />
       <div className="auth-container">
         <section className="auth-info-panel">
-          <p className="auth-eyebrow">
-            Authentication
-          </p>
-          <h1 className="auth-title">
-            Enter The Matchroom
-          </h1>
+          <p className="auth-eyebrow">Authentication</p>
+          <h1 className="auth-title">Enter The Matchroom</h1>
           <p className="auth-description">
             Create your player identity to unlock multiplayer games and secure
             websocket sessions.
@@ -100,9 +95,7 @@ export const Auth = () => {
             {mode === "register" ? (
               <>
                 <label className="auth-input-group">
-                  <span className="auth-label">
-                    Username
-                  </span>
+                  <span className="auth-label">Username</span>
                   <input
                     required
                     minLength={3}
@@ -114,9 +107,7 @@ export const Auth = () => {
                   />
                 </label>
                 <label className="auth-input-group">
-                  <span className="auth-label">
-                    Email
-                  </span>
+                  <span className="auth-label">Email</span>
                   <input
                     required
                     type="email"
@@ -129,9 +120,7 @@ export const Auth = () => {
               </>
             ) : (
               <label className="auth-input-group">
-                <span className="auth-label">
-                  Email or Username
-                </span>
+                <span className="auth-label">Email or Username</span>
                 <input
                   required
                   value={identifier}
@@ -143,9 +132,7 @@ export const Auth = () => {
             )}
 
             <label className="auth-input-group">
-              <span className="auth-label">
-                Password
-              </span>
+              <span className="auth-label">Password</span>
               <input
                 required
                 type="password"
@@ -158,11 +145,7 @@ export const Auth = () => {
               />
             </label>
 
-            {error ? (
-              <div className="auth-error">
-                {error}
-              </div>
-            ) : null}
+            {error ? <div className="auth-error">{error}</div> : null}
 
             <button
               type="submit"

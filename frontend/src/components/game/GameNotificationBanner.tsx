@@ -1,8 +1,4 @@
-import { GameNotification } from "./types";
-
-type GameNotificationBannerProps = {
-  gameNotification: GameNotification;
-};
+import type { GameNotificationBannerProps } from "./types";
 
 export const GameNotificationBanner = ({
   gameNotification,

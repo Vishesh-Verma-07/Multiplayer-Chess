@@ -1,9 +1,4 @@
-type GameHeaderProps = {
-  statusText: string;
-  startButtonText: string;
-  startRequested: boolean;
-  onStartMatch: () => void;
-};
+import type { GameHeaderProps } from "./types";
 
 export const GameHeader = ({
   statusText,

@@ -1,14 +1,10 @@
 import { WebSocket } from "ws";
-import { AuthenticatedUser } from "./auth";
 import { getActivePersistedGameForUser } from "./chessPersistenceClient";
 import { Game } from "./Game";
 import { INIT_GAME, INVALID_MOVE, MOVE } from "./messages";
+import type { AuthenticatedSocket } from "./types/auth";
 
 //todo user, class game class
-
-export type AuthenticatedSocket = WebSocket & {
-  user: AuthenticatedUser;
-};
 
 export class GameManager {
   private gamesById: Map<string, Game>;

@@ -1,10 +1,5 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
-
-export type AuthenticatedUser = {
-  id: string;
-  username: string;
-  email: string;
-};
+import type { AuthenticatedUser } from "./types/auth";
 
 const AUTH_JWT_SECRET =
   process.env.AUTH_JWT_SECRET ?? "dev-only-secret-change-me";

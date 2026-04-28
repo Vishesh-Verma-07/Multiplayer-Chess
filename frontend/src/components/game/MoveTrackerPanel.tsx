@@ -1,16 +1,6 @@
 import { CapturedPiecesPanel } from "./CapturedPiecesPanel";
 import { GameStatCard } from "./GameStatCard";
-import { CapturedPieces, MoveRow } from "./types";
-
-type MoveTrackerPanelProps = {
-  moveRows: MoveRow[];
-  playerLabel: string;
-  currentTurnLabel: string;
-  moveCount: number;
-  statusText: string;
-  isMyTurn: boolean;
-  capturedPieces: CapturedPieces;
-};
+import type { MoveTrackerPanelProps } from "./types";
 
 export const MoveTrackerPanel = ({
   moveRows,

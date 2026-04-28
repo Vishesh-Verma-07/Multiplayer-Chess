@@ -1,34 +1,9 @@
-type PersistedGameResult = "WHITE_WIN" | "BLACK_WIN" | "DRAW";
-
-type CreatePersistedGameInput = {
-  whitePlayerId?: string;
-  blackPlayerId?: string;
-  initialFen: string;
-};
-
-type SaveBoardSnapshotInput = {
-  gameId: string;
-  fen: string;
-  moveNumber: number;
-  sideToMove: "w" | "b";
-  boardState: unknown;
-};
-
-type FinishPersistedGameInput = {
-  gameId: string;
-  result: PersistedGameResult;
-  winnerId?: string;
-  pgn?: string;
-  finalFen: string;
-};
-
-export type ActivePersistedGame = {
-  gameId: string;
-  whitePlayerId: string | null;
-  blackPlayerId: string | null;
-  currentFen: string;
-  movesCount: number;
-};
+import type {
+  ActivePersistedGame,
+  CreatePersistedGameInput,
+  FinishPersistedGameInput,
+  SaveBoardSnapshotInput,
+} from "./types/persistence";
 
 const PERSISTENCE_BACKEND_URL =
   process.env.HTTPS_BACKEND_URL ??

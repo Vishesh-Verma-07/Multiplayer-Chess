@@ -1,19 +1,14 @@
 import { Chess } from "chess.js";
 import { WebSocket } from "ws";
 import {
-  type ActivePersistedGame,
   createPersistedGame,
   finishPersistedGame,
   saveBoardSnapshot,
 } from "./chessPersistenceClient";
-import type { AuthenticatedSocket } from "./GameManager";
 import { GAME_OVER, INIT_GAME, INVALID_MOVE, MOVE } from "./messages";
-
-type PersistedMove = {
-  from: string;
-  to: string;
-  promotion?: "q" | "r" | "b" | "n";
-};
+import type { AuthenticatedSocket } from "./types/auth";
+import type { PersistedMove } from "./types/game";
+import type { ActivePersistedGame } from "./types/persistence";
 
 export class Game {
   public player1: WebSocket | null;

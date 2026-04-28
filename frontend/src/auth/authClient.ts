@@ -1,15 +1,4 @@
-export type AuthUser = {
-  id: string;
-  username: string;
-  email: string;
-  createdAt: string;
-};
-
-export type AuthSuccessResponse = {
-  token: string;
-  expiresIn: string;
-  user: AuthUser;
-};
+import type { AuthSuccessResponse, AuthUser } from "./types";
 
 export const TOKEN_STORAGE_KEY = "chess_auth_token";
 

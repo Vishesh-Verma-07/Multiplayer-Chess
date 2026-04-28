@@ -18,24 +18,7 @@ import { PlayerColor } from "../components/game/types";
 import { useMoveSound } from "../hooks/useMoveSound";
 import { useSocket } from "../hooks/useSocket";
 import { GAME_OVER, INIT_GAME, INVALID_MOVE, MOVE } from "../messages";
-
-type IncomingMessage = {
-  type: string;
-  payload?: {
-    color?: PlayerColor;
-    winner?: PlayerColor | null;
-    message?: string;
-    fen?: string;
-    resumed?: boolean;
-    from?: string;
-    to?: string;
-    move?: {
-      from: string;
-      to: string;
-      promotion?: "q" | "r" | "b" | "n";
-    };
-  };
-};
+import type { IncomingMessage } from "./types";
 
 export const Game = () => {
   const { token, user, logout } = useAuth();

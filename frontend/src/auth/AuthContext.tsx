@@ -1,26 +1,12 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
-  AuthUser,
   TOKEN_STORAGE_KEY,
   getCurrentUser,
   loginUser,
   logoutUser,
   registerUser,
 } from "./authClient";
-
-type AuthContextValue = {
-  user: AuthUser | null;
-  token: string | null;
-  loading: boolean;
-  isAuthenticated: boolean;
-  login: (identifier: string, password: string) => Promise<void>;
-  register: (
-    username: string,
-    email: string,
-    password: string,
-  ) => Promise<void>;
-  logout: () => Promise<void>;
-};
+import type { AuthContextValue, AuthUser } from "./types";
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 

@@ -37,26 +37,26 @@ const requestJson = async <T>(
 export const createPersistedGame = async (
   input: CreatePersistedGameInput,
 ): Promise<{ id: string }> => {
-  return requestJson<{ id: string }>("/games", "POST", input);
+  return requestJson<{ id: string }>("/api/games", "POST", input);
 };
 
 export const saveBoardSnapshot = async (
   input: SaveBoardSnapshotInput,
 ): Promise<void> => {
-  await requestJson(`/games/${input.gameId}/snapshots`, "POST", input);
+  await requestJson(`/api/games/${input.gameId}/snapshots`, "POST", input);
 };
 
 export const finishPersistedGame = async (
   input: FinishPersistedGameInput,
 ): Promise<void> => {
-  await requestJson(`/games/${input.gameId}/finish`, "POST", input);
+  await requestJson(`/api/games/${input.gameId}/finish`, "POST", input);
 };
 
 export const getActivePersistedGameForUser = async (
   userId: string,
 ): Promise<ActivePersistedGame | null> => {
   const response = await requestJson<{ game: ActivePersistedGame | null }>(
-    `/games/active/${userId}`,
+    `/api/games/active/${userId}`,
     "GET",
   );
 

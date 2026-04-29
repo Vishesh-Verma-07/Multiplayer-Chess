@@ -7,7 +7,7 @@ import { GameManager } from "./GameManager";
 const PORT = 8080;
 
 const server = createServer((req, res) => {
-  if (req.method === "GET" && req.url === "/health") {
+  if (req.method === "GET" && req.url === "/api/health") {
     res.writeHead(200, { "Content-Type": "application/json" });
     res.end(
       JSON.stringify({
@@ -74,14 +74,14 @@ server.on("upgrade", (req, socket, head) => {
   const parsedUrl = new URL(req.url ?? "/", `http://${host}`);
   const { pathname } = parsedUrl;
 
-  if (pathname === "/ws/alive") {
+  if (pathname === "/api/ws/alive") {
     aliveWss.handleUpgrade(req, socket, head, (ws) => {
       aliveWss.emit("connection", ws, req);
     });
     return;
   }
 
-  if (pathname === "/" || pathname === "/ws" || pathname === "/ws/game") {
+  if (pathname === "/api/ws" || pathname === "/api/ws/game") {
     const token = parsedUrl.searchParams.get("token");
     if (!token) {
       socket.write(
@@ -113,6 +113,6 @@ server.on("upgrade", (req, socket, head) => {
 
 server.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
-  console.log(`Game WS endpoint: ws://localhost:${PORT}/ws`);
-  console.log(`Alive WS endpoint: ws://localhost:${PORT}/ws/alive`);
+  console.log(`Game WS endpoint: ws://localhost:${PORT}/api/ws`);
+  console.log(`Alive WS endpoint: ws://localhost:${PORT}/api/ws/alive`);
 });

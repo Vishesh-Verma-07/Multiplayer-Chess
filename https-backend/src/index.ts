@@ -70,7 +70,7 @@ type LoginBody = {
 const isValidEmail = (email: string) =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-app.get("/health", (_req: Request, res: Response) => {
+app.get("/api/health", (_req: Request, res: Response) => {
   res.status(200).json({
     status: "ok",
     service: "chess-https-backend",
@@ -79,7 +79,7 @@ app.get("/health", (_req: Request, res: Response) => {
 });
 
 app.get(
-  "/games/active/:userId",
+  "/api/games/active/:userId",
   async (req: Request<{ userId: string }>, res: Response) => {
     const { userId } = req.params;
 
@@ -99,7 +99,7 @@ app.get(
 );
 
 app.post(
-  "/games",
+  "/api/games",
   async (req: Request<unknown, unknown, CreateGameBody>, res: Response) => {
     try {
       const game = await createChessGame({
@@ -117,7 +117,7 @@ app.post(
 );
 
 app.post(
-  "/games/:gameId/snapshots",
+  "/api/games/:gameId/snapshots",
   async (
     req: Request<{ gameId: string }, unknown, SnapshotBody>,
     res: Response,
@@ -152,7 +152,7 @@ app.post(
 );
 
 app.post(
-  "/games/:gameId/finish",
+  "/api/games/:gameId/finish",
   async (
     req: Request<{ gameId: string }, unknown, FinishGameBody>,
     res: Response,
@@ -184,7 +184,7 @@ app.post(
 );
 
 app.post(
-  "/auth/register",
+  "/api/auth/register",
   async (req: Request<unknown, unknown, RegisterBody>, res: Response) => {
     const username = req.body.username?.trim();
     const email = req.body.email?.trim().toLowerCase();
@@ -235,7 +235,7 @@ app.post(
 );
 
 app.post(
-  "/auth/login",
+  "/api/auth/login",
   async (req: Request<unknown, unknown, LoginBody>, res: Response) => {
     const identifier = req.body.identifier?.trim().toLowerCase();
     const password = req.body.password;
@@ -267,7 +267,7 @@ app.post(
   },
 );
 
-app.get("/auth/me", async (req: Request, res: Response) => {
+app.get("/api/auth/me", async (req: Request, res: Response) => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith("Bearer ")
     ? authHeader.slice("Bearer ".length)
@@ -293,20 +293,20 @@ app.get("/auth/me", async (req: Request, res: Response) => {
   res.status(200).json({ user: sanitizeAuthUser(userById) });
 });
 
-app.post("/auth/logout", (_req: Request, res: Response) => {
+app.post("/api/auth/logout", (_req: Request, res: Response) => {
   // JWT auth is stateless. The client forgets the token on logout.
   res.status(200).json({ ok: true });
 });
 
-app.get("/", (_req: Request, res: Response) => {
+app.get("/api", (_req: Request, res: Response) => {
   res.status(200).json({
     message: "Chess auth backend is running.",
     endpoints: [
-      "POST /auth/register",
-      "POST /auth/login",
-      "GET /auth/me",
-      "POST /auth/logout",
-      "GET /health",
+      "POST /api/auth/register",
+      "POST /api/auth/login",
+      "GET /api/auth/me",
+      "POST /api/auth/logout",
+      "GET /api/health",
     ],
   });
 });

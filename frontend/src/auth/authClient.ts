@@ -22,7 +22,7 @@ export const registerUser = async (payload: {
   email: string;
   password: string;
 }): Promise<AuthSuccessResponse> => {
-  const response = await fetch(`${HTTPS_BACKEND_URL}/auth/register`, {
+  const response = await fetch(`${HTTPS_BACKEND_URL}/api/auth/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -37,7 +37,7 @@ export const loginUser = async (payload: {
   identifier: string;
   password: string;
 }): Promise<AuthSuccessResponse> => {
-  const response = await fetch(`${HTTPS_BACKEND_URL}/auth/login`, {
+  const response = await fetch(`${HTTPS_BACKEND_URL}/api/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -51,7 +51,7 @@ export const loginUser = async (payload: {
 export const getCurrentUser = async (
   token: string,
 ): Promise<{ user: AuthUser }> => {
-  const response = await fetch(`${HTTPS_BACKEND_URL}/auth/me`, {
+  const response = await fetch(`${HTTPS_BACKEND_URL}/api/auth/me`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -61,7 +61,7 @@ export const getCurrentUser = async (
 };
 
 export const logoutUser = async (token: string): Promise<void> => {
-  await fetch(`${HTTPS_BACKEND_URL}/auth/logout`, {
+  await fetch(`${HTTPS_BACKEND_URL}/api/auth/logout`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,

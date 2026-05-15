@@ -1,7 +1,7 @@
 import { WebSocket } from "ws";
 import { getActivePersistedGameForUser } from "./chessPersistenceClient";
 import { Game } from "./Game";
-import { INIT_GAME, INVALID_MOVE, MOVE } from "./messages";
+import { DRAW_REQUEST, DRAW_RESPONSE, INIT_GAME, INVALID_MOVE, MOVE, RESIGN } from "./messages";
 import type { AuthenticatedSocket } from "./types/auth";
 
 //todo user, class game class
@@ -187,6 +187,45 @@ export class GameManager {
 
         if (game) {
           game.makeMove(socket, message.payload.move);
+        } else {
+          this.sendInvalidMove(
+            socket,
+            "No active game found for this connection. Reconnect to resume.",
+          );
+        }
+      }
+
+      if (message.type === RESIGN) {
+        const game = this.findGameBySocket(socket);
+
+        if (game) {
+          game.resign(socket);
+        } else {
+          this.sendInvalidMove(
+            socket,
+            "No active game found for this connection. Reconnect to resume.",
+          );
+        }
+      }
+
+      if (message.type === DRAW_REQUEST) {
+        const game = this.findGameBySocket(socket);
+
+        if (game) {
+          game.requestDraw(socket);
+        } else {
+          this.sendInvalidMove(
+            socket,
+            "No active game found for this connection. Reconnect to resume.",
+          );
+        }
+      }
+
+      if (message.type === DRAW_RESPONSE) {
+        const game = this.findGameBySocket(socket);
+
+        if (game) {
+          game.respondDraw(socket, Boolean(message.payload?.accepted));
         } else {
           this.sendInvalidMove(
             socket,

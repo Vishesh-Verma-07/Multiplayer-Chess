@@ -5,10 +5,10 @@ import {
   finishPersistedGame,
   saveBoardSnapshot,
 } from "./chessPersistenceClient";
-import { GAME_OVER, INIT_GAME, INVALID_MOVE, MOVE } from "./messages";
+import { DRAW_REQUEST, DRAW_RESPONSE, GAME_OVER, INIT_GAME, INVALID_MOVE, MOVE } from "./messages";
 import type { AuthenticatedSocket } from "./types/auth";
 import type { PersistedMove } from "./types/game";
-import type { ActivePersistedGame } from "./types/persistence";
+import type { ActivePersistedGame, PersistedGameResult } from "./types/persistence";
 
 export class Game {
   public player1: WebSocket | null;
@@ -20,6 +20,7 @@ export class Game {
   private readonly blackPlayerId: string;
   private moves: number;
   private finished: boolean;
+  private pendingDrawOfferFrom: "white" | "black" | null;
 
   //make the players as types
 
@@ -51,6 +52,7 @@ export class Game {
     this.blackPlayerId = blackPlayerId;
     this.moves = moves ?? 0;
     this.finished = false;
+    this.pendingDrawOfferFrom = null;
   }
 
   private sendInit(
@@ -214,6 +216,19 @@ export class Game {
     });
   }
 
+  private async persistFinishedGameWithResult(
+    result: PersistedGameResult,
+    winnerId?: string,
+  ) {
+    await finishPersistedGame({
+      gameId: this.gameId,
+      result,
+      winnerId,
+      pgn: this.board.pgn(),
+      finalFen: this.board.fen(),
+    });
+  }
+
   private broadcast(type: string, payload: unknown) {
     const message = JSON.stringify({ type, payload });
 
@@ -279,6 +294,7 @@ export class Game {
 
     if (this.board.isGameOver()) {
       this.finished = true;
+      this.pendingDrawOfferFrom = null;
 
       void this.persistFinishedGame().catch((error) => {
         console.error("Failed to finalize chess game:", error);
@@ -290,6 +306,7 @@ export class Game {
           : this.board.turn() === "w"
             ? "black"
             : "white",
+        reason: this.board.isDraw() ? "draw" : "checkmate",
       });
       return;
     }
@@ -299,5 +316,125 @@ export class Game {
     });
 
     //send the updated board to both plyaer
+  }
+
+  resign(socket: AuthenticatedSocket) {
+    if (this.finished) {
+      this.sendInvalidMove(socket, "This match has already finished.");
+      return;
+    }
+
+    const playerColor = this.getPlayerColor(socket);
+    if (!playerColor) {
+      this.sendInvalidMove(socket, "You are not part of this match.");
+      return;
+    }
+
+    const winnerColor = playerColor === "white" ? "black" : "white";
+    const winnerId = winnerColor === "white"
+      ? this.whitePlayerId
+      : this.blackPlayerId;
+
+    this.finished = true;
+    this.pendingDrawOfferFrom = null;
+
+    void this.persistFinishedGameWithResult(
+      winnerColor === "white" ? "WHITE_WIN" : "BLACK_WIN",
+      winnerId,
+    ).catch((error) => {
+      console.error("Failed to finalize resigned chess game:", error);
+    });
+
+    this.broadcast(GAME_OVER, {
+      winner: winnerColor,
+      reason: "resign",
+    });
+  }
+
+  requestDraw(socket: AuthenticatedSocket) {
+    if (this.finished) {
+      this.sendInvalidMove(socket, "This match has already finished.");
+      return;
+    }
+
+    const playerColor = this.getPlayerColor(socket);
+    if (!playerColor) {
+      this.sendInvalidMove(socket, "You are not part of this match.");
+      return;
+    }
+
+    if (this.pendingDrawOfferFrom) {
+      if (this.pendingDrawOfferFrom === playerColor) {
+        this.sendInvalidMove(socket, "A draw offer is already pending.");
+      } else {
+        this.sendInvalidMove(socket, "Respond to the pending draw offer.");
+      }
+      return;
+    }
+
+    const opponent = this.getOpponentSocket(socket);
+    if (!opponent || opponent.readyState !== WebSocket.OPEN) {
+      this.sendInvalidMove(socket, "Opponent is not connected.");
+      return;
+    }
+
+    this.pendingDrawOfferFrom = playerColor;
+
+    opponent.send(
+      JSON.stringify({
+        type: DRAW_REQUEST,
+        payload: {
+          fromColor: playerColor,
+          fromUsername: socket.user.username,
+        },
+      }),
+    );
+  }
+
+  respondDraw(socket: AuthenticatedSocket, accepted: boolean) {
+    if (this.finished) {
+      this.sendInvalidMove(socket, "This match has already finished.");
+      return;
+    }
+
+    const responderColor = this.getPlayerColor(socket);
+    if (!responderColor) {
+      this.sendInvalidMove(socket, "You are not part of this match.");
+      return;
+    }
+
+    if (!this.pendingDrawOfferFrom) {
+      this.sendInvalidMove(socket, "No draw offer to respond to.");
+      return;
+    }
+
+    if (this.pendingDrawOfferFrom === responderColor) {
+      this.sendInvalidMove(socket, "Waiting for your opponent to respond.");
+      return;
+    }
+
+    if (accepted) {
+      this.finished = true;
+      this.pendingDrawOfferFrom = null;
+
+      void this.persistFinishedGameWithResult("DRAW").catch((error) => {
+        console.error("Failed to finalize agreed draw:", error);
+      });
+
+      this.broadcast(GAME_OVER, {
+        winner: null,
+        reason: "draw",
+      });
+      return;
+    }
+
+    const offeredBy = this.pendingDrawOfferFrom;
+    this.pendingDrawOfferFrom = null;
+
+    this.broadcast(DRAW_RESPONSE, {
+      accepted: false,
+      byColor: responderColor,
+      offeredBy,
+    });
   }
 }

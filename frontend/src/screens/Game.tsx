@@ -17,7 +17,15 @@ import {
 import { PlayerColor } from "../components/game/types";
 import { useMoveSound } from "../hooks/useMoveSound";
 import { useSocket } from "../hooks/useSocket";
-import { GAME_OVER, INIT_GAME, INVALID_MOVE, MOVE } from "../messages";
+import {
+  DRAW_REQUEST,
+  DRAW_RESPONSE,
+  GAME_OVER,
+  INIT_GAME,
+  INVALID_MOVE,
+  MOVE,
+  RESIGN,
+} from "../messages";
 import type { IncomingMessage } from "./types";
 
 export const Game = () => {
@@ -33,7 +41,18 @@ export const Game = () => {
   const [gameOverWinner, setGameOverWinner] = useState<PlayerColor | null>(
     null,
   );
+  const [gameOverReason, setGameOverReason] = useState<
+    "checkmate" | "draw" | "resign" | null
+  >(null);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [drawOfferSent, setDrawOfferSent] = useState(false);
+  const [drawOfferReceived, setDrawOfferReceived] = useState<{
+    fromColor: PlayerColor;
+    fromUsername: string;
+  } | null>(null);
+  const [drawStatusMessage, setDrawStatusMessage] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!socket) {
@@ -59,6 +78,10 @@ export const Game = () => {
           setGameStarted(true);
           setStartRequested(false);
           setGameOverWinner(null);
+          setGameOverReason(null);
+          setDrawOfferSent(false);
+          setDrawOfferReceived(null);
+          setDrawStatusMessage(null);
           setLastError(resumed ? "Reconnected to active match." : null);
           break;
         }
@@ -97,8 +120,52 @@ export const Game = () => {
 
         case GAME_OVER: {
           setGameOverWinner(message.payload?.winner ?? null);
+          setGameOverReason(message.payload?.reason ?? null);
           setGameStarted(true);
           setStartRequested(false);
+          setDrawOfferSent(false);
+          setDrawOfferReceived(null);
+          if (message.payload?.reason === "resign") {
+            if (playerColor && message.payload?.winner) {
+              setDrawStatusMessage(
+                message.payload.winner === playerColor
+                  ? "Opponent resigned."
+                  : "You resigned.",
+              );
+            } else {
+              setDrawStatusMessage("Match ended by resignation.");
+            }
+          }
+          break;
+        }
+
+        case DRAW_REQUEST: {
+          if (message.payload?.fromUsername && message.payload?.fromColor) {
+            setDrawOfferReceived({
+              fromUsername: message.payload.fromUsername,
+              fromColor: message.payload.fromColor,
+            });
+            setDrawOfferSent(false);
+            setDrawStatusMessage(null);
+            setLastError(null);
+          }
+          break;
+        }
+
+        case DRAW_RESPONSE: {
+          if (message.payload?.accepted === false) {
+            setDrawOfferSent(false);
+            if (playerColor && message.payload?.offeredBy) {
+              const isOfferer = playerColor === message.payload.offeredBy;
+              setDrawStatusMessage(
+                isOfferer
+                  ? "Opponent declined your draw offer."
+                  : "You declined the draw offer.",
+              );
+            } else {
+              setDrawStatusMessage("Draw offer declined.");
+            }
+          }
           break;
         }
 
@@ -106,7 +173,7 @@ export const Game = () => {
           break;
       }
     };
-  }, [socket, chess, playMoveSound]);
+  }, [socket, chess, playMoveSound, playerColor]);
 
   const moveHistory = useMemo(() => chess.history(), [board, chess]);
   const verboseMoveHistory = useMemo(
@@ -126,17 +193,28 @@ export const Game = () => {
       (playerColor === "black" && chess.turn() === "b")
     : false;
 
-  const statusText = buildStatusText(chess, gameStarted, gameOverWinner);
+  const statusText = buildStatusText(
+    chess,
+    gameStarted,
+    gameOverWinner,
+    gameOverReason,
+  );
   const gameNotification = buildGameNotification(
     chess,
     gameStarted,
     gameOverWinner,
+    gameOverReason,
   );
   const startButtonText = startRequested
     ? "Searching Opponent..."
     : gameStarted && !gameOverWinner
       ? "Start a New Game"
       : "Start Match";
+
+  const isGameOver = Boolean(gameOverWinner || gameOverReason);
+  const canOfferDraw =
+    Boolean(socket) && gameStarted && !isGameOver && !drawOfferSent && !drawOfferReceived;
+  const canResign = Boolean(socket) && gameStarted && !isGameOver;
 
   if (!socket) {
     return <ConnectionState />;
@@ -171,17 +249,100 @@ export const Game = () => {
           onStartMatch={() => {
             setStartRequested(true);
             setLastError(null);
+            setDrawOfferSent(false);
+            setDrawOfferReceived(null);
+            setDrawStatusMessage(null);
             socket.send(
               JSON.stringify({
                 type: INIT_GAME,
               }),
             );
           }}
+          onOfferDraw={() => {
+            if (!canOfferDraw) {
+              return;
+            }
+
+            setDrawOfferSent(true);
+            setDrawStatusMessage("Draw offer sent.");
+            setLastError(null);
+            socket.send(
+              JSON.stringify({
+                type: DRAW_REQUEST,
+              }),
+            );
+          }}
+          onResign={() => {
+            if (!canResign) {
+              return;
+            }
+
+            setLastError(null);
+            setDrawOfferSent(false);
+            setDrawOfferReceived(null);
+            setDrawStatusMessage(null);
+            socket.send(
+              JSON.stringify({
+                type: RESIGN,
+              }),
+            );
+          }}
+          canOfferDraw={canOfferDraw}
+          canResign={canResign}
+          drawOfferSent={drawOfferSent}
         />
 
         <section className="grid gap-6 xl:grid-cols-[minmax(320px,1fr)_340px]">
           <div className="rounded-2xl border border-zinc-700/70 bg-black/70 p-4 shadow-2xl shadow-black/60 backdrop-blur-sm sm:p-6">
             <GameNotificationBanner gameNotification={gameNotification} />
+
+            {drawStatusMessage ? (
+              <div className="mb-4 rounded-lg border border-emerald-300/40 bg-emerald-400/10 px-3 py-2 text-sm text-emerald-100">
+                {drawStatusMessage}
+              </div>
+            ) : null}
+
+            {drawOfferReceived ? (
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-300/60 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+                <span>
+                  {drawOfferReceived.fromUsername} offered a draw.
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="rounded-md border border-emerald-200/70 bg-emerald-200/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-emerald-100 transition hover:bg-emerald-200/20"
+                    onClick={() => {
+                      setDrawOfferReceived(null);
+                      setDrawStatusMessage(null);
+                      socket.send(
+                        JSON.stringify({
+                          type: DRAW_RESPONSE,
+                          payload: { accepted: true },
+                        }),
+                      );
+                    }}
+                  >
+                    Accept
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-md border border-rose-200/70 bg-rose-200/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-rose-100 transition hover:bg-rose-200/20"
+                    onClick={() => {
+                      setDrawOfferReceived(null);
+                      setDrawStatusMessage("You declined the draw offer.");
+                      socket.send(
+                        JSON.stringify({
+                          type: DRAW_RESPONSE,
+                          payload: { accepted: false },
+                        }),
+                      );
+                    }}
+                  >
+                    Decline
+                  </button>
+                </div>
+              </div>
+            ) : null}
 
             {lastError ? (
               <div className="mb-4 rounded-lg border border-rose-400/50 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">

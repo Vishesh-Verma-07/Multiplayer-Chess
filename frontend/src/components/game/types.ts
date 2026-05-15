@@ -23,6 +23,11 @@ export type GameHeaderProps = {
   startButtonText: string;
   startRequested: boolean;
   onStartMatch: () => void;
+  onOfferDraw: () => void;
+  onResign: () => void;
+  canOfferDraw: boolean;
+  canResign: boolean;
+  drawOfferSent: boolean;
 };
 
 export type GameNotificationBannerProps = {

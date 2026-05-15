@@ -7,6 +7,12 @@ export type IncomingMessage = {
   payload?: {
     color?: PlayerColor;
     winner?: PlayerColor | null;
+    reason?: "checkmate" | "draw" | "resign";
+    fromColor?: PlayerColor;
+    fromUsername?: string;
+    accepted?: boolean;
+    byColor?: PlayerColor;
+    offeredBy?: PlayerColor;
     message?: string;
     fen?: string;
     resumed?: boolean;

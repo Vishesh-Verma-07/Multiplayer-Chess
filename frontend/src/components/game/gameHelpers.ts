@@ -21,9 +21,18 @@ export const buildStatusText = (
   chess: Chess,
   gameStarted: boolean,
   gameOverWinner: PlayerColor | null,
+  gameOverReason: "checkmate" | "draw" | "resign" | null,
 ) => {
   if (!gameStarted) {
     return "Click Start Match to enter matchmaking.";
+  }
+
+  if (gameOverReason === "draw") {
+    return "Draw agreed.";
+  }
+
+  if (gameOverReason === "resign" && gameOverWinner) {
+    return `${formatPlayerColor(gameOverWinner)} wins by resignation.`;
   }
 
   if (gameOverWinner) {
@@ -49,9 +58,24 @@ export const buildGameNotification = (
   chess: Chess,
   gameStarted: boolean,
   gameOverWinner: PlayerColor | null,
+  gameOverReason: "checkmate" | "draw" | "resign" | null,
 ): GameNotification => {
   if (!gameStarted) {
     return null;
+  }
+
+  if (gameOverReason === "draw") {
+    return {
+      message: "Draw agreed. Well played!",
+      tone: "warning",
+    };
+  }
+
+  if (gameOverReason === "resign" && gameOverWinner) {
+    return {
+      message: `${formatPlayerColor(gameOverWinner)} wins by resignation.`,
+      tone: "critical",
+    };
   }
 
   if (gameOverWinner || chess.isCheckmate()) {

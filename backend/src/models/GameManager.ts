@@ -1,8 +1,15 @@
 import { WebSocket } from "ws";
-import { getActivePersistedGameForUser } from "./chessPersistenceClient";
+import { getActivePersistedGameForUser } from "../db/chessPersistenceClient";
+import type { AuthenticatedSocket } from "../types/auth";
+import {
+  DRAW_REQUEST,
+  DRAW_RESPONSE,
+  INIT_GAME,
+  INVALID_MOVE,
+  MOVE,
+  RESIGN,
+} from "../utils/messages";
 import { Game } from "./Game";
-import { DRAW_REQUEST, DRAW_RESPONSE, INIT_GAME, INVALID_MOVE, MOVE, RESIGN } from "./messages";
-import type { AuthenticatedSocket } from "./types/auth";
 
 //todo user, class game class
 

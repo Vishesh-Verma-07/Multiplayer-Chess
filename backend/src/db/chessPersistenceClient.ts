@@ -3,7 +3,7 @@ import type {
   CreatePersistedGameInput,
   FinishPersistedGameInput,
   SaveBoardSnapshotInput,
-} from "./types/persistence";
+} from "../types/persistence";
 
 const PERSISTENCE_BACKEND_URL =
   process.env.HTTPS_BACKEND_URL ??

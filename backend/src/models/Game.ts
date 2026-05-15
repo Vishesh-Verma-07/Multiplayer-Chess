@@ -4,11 +4,21 @@ import {
   createPersistedGame,
   finishPersistedGame,
   saveBoardSnapshot,
-} from "./chessPersistenceClient";
-import { DRAW_REQUEST, DRAW_RESPONSE, GAME_OVER, INIT_GAME, INVALID_MOVE, MOVE } from "./messages";
-import type { AuthenticatedSocket } from "./types/auth";
-import type { PersistedMove } from "./types/game";
-import type { ActivePersistedGame, PersistedGameResult } from "./types/persistence";
+} from "../db/chessPersistenceClient";
+import type { AuthenticatedSocket } from "../types/auth";
+import type { PersistedMove } from "../types/game";
+import type {
+  ActivePersistedGame,
+  PersistedGameResult,
+} from "../types/persistence";
+import {
+  DRAW_REQUEST,
+  DRAW_RESPONSE,
+  GAME_OVER,
+  INIT_GAME,
+  INVALID_MOVE,
+  MOVE,
+} from "../utils/messages";
 
 export class Game {
   public player1: WebSocket | null;
@@ -331,9 +341,8 @@ export class Game {
     }
 
     const winnerColor = playerColor === "white" ? "black" : "white";
-    const winnerId = winnerColor === "white"
-      ? this.whitePlayerId
-      : this.blackPlayerId;
+    const winnerId =
+      winnerColor === "white" ? this.whitePlayerId : this.blackPlayerId;
 
     this.finished = true;
     this.pendingDrawOfferFrom = null;
@@ -409,32 +418,56 @@ export class Game {
     }
 
     if (this.pendingDrawOfferFrom === responderColor) {
-      this.sendInvalidMove(socket, "Waiting for your opponent to respond.");
+      this.sendInvalidMove(
+        socket,
+        "You cannot respond to your own draw offer.",
+      );
       return;
     }
 
+    const opponentColor = responderColor === "white" ? "black" : "white";
+    const opponent = this.getOpponentSocket(socket);
+
+    if (!opponent || opponent.readyState !== WebSocket.OPEN) {
+      this.sendInvalidMove(socket, "Opponent is not connected.");
+      return;
+    }
+
+    this.pendingDrawOfferFrom = null;
+
     if (accepted) {
       this.finished = true;
-      this.pendingDrawOfferFrom = null;
 
       void this.persistFinishedGameWithResult("DRAW").catch((error) => {
-        console.error("Failed to finalize agreed draw:", error);
+        console.error("Failed to finalize drawn chess game:", error);
       });
 
       this.broadcast(GAME_OVER, {
         winner: null,
         reason: "draw",
       });
+
       return;
     }
 
-    const offeredBy = this.pendingDrawOfferFrom;
-    this.pendingDrawOfferFrom = null;
+    opponent.send(
+      JSON.stringify({
+        type: DRAW_RESPONSE,
+        payload: {
+          fromColor: responderColor,
+          accepted: false,
+        },
+      }),
+    );
 
-    this.broadcast(DRAW_RESPONSE, {
-      accepted: false,
-      byColor: responderColor,
-      offeredBy,
-    });
+    socket.send(
+      JSON.stringify({
+        type: DRAW_RESPONSE,
+        payload: {
+          fromColor: opponentColor,
+          accepted: false,
+        },
+      }),
+    );
   }
 }

@@ -12,9 +12,3 @@ export type SafeUser = {
   email: string;
   createdAt: string;
 };
-
-export type AuthTokenPayload = {
-  sub: string;
-  username: string;
-  email: string;
-};

@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
-import { prisma } from "./prisma.js";
-import type { UserRecord } from "./types.js";
+import { prisma } from "../../db/prisma.js";
+import type { UserRecord } from "../../types/user.js";
 
 const SALT_ROUNDS = 10;
 

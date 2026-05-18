@@ -1,6 +1,7 @@
 import type { JwtPayload } from "jsonwebtoken";
 import jwt from "jsonwebtoken";
-import type { AuthTokenPayload, SafeUser, UserRecord } from "./types.js";
+import type { AuthTokenPayload } from "../../types/auth.js";
+import type { SafeUser, UserRecord } from "../../types/user.js";
 
 const AUTH_JWT_SECRET =
   process.env.AUTH_JWT_SECRET ?? "dev-only-secret-change-me";

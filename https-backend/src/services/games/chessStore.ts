@@ -1,5 +1,5 @@
 import { GameResult, GameStatus, Prisma } from "@prisma/client";
-import { prisma } from "./prisma.js";
+import { prisma } from "../../db/prisma.js";
 
 type CreateGameInput = {
   whitePlayerId?: string;

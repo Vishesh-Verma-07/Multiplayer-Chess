@@ -4,12 +4,14 @@ import { useAuth } from "../auth/AuthContext";
 import "./Auth.css";
 import { AuthMode } from "./types";
 
+
 export const Auth = () => {
   const [mode, setMode] = useState<AuthMode>("login");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -133,16 +135,41 @@ export const Auth = () => {
 
             <label className="auth-input-group">
               <span className="auth-label">Password</span>
-              <input
-                required
-                type="password"
-                minLength={8}
-                maxLength={72}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="auth-input"
-                placeholder="********"
-              />
+              <div className="auth-password-field">
+                <input
+                  required
+                  type={showPassword ? "text" : "password"}
+                  minLength={8}
+                  maxLength={72}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className="auth-input auth-input--with-toggle"
+                  placeholder="********"
+                />
+                <button
+                  type="button"
+                  className="auth-password-toggle"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  data-visible={showPassword}
+                  aria-pressed={showPassword}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  title={showPassword ? "Hide password" : "Show password"}
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7" />
+                    <circle cx="12" cy="12" r="3" />
+                    {showPassword ? null : <path d="M4 4l16 16" />}
+                  </svg>
+                </button>
+              </div>
             </label>
 
             {error ? <div className="auth-error">{error}</div> : null}

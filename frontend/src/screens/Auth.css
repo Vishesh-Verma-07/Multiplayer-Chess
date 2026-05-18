@@ -205,6 +205,81 @@
   transition: all 0.3s ease;
 }
 
+.auth-input--with-toggle {
+  padding-right: 48px;
+}
+
+.auth-password-field {
+  position: relative;
+}
+
+.auth-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.auth-password-toggle:hover {
+  color: var(--text-primary);
+  transform: translateY(-50%) scale(1.06);
+}
+
+.auth-password-toggle:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.auth-password-toggle svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.auth-password-toggle:active svg {
+  transform: scale(0.94);
+}
+
+.auth-password-toggle[data-visible="true"] svg {
+  animation: eyeReveal 0.25s ease;
+}
+
+.auth-password-toggle[data-visible="false"] svg {
+  animation: eyeHide 0.25s ease;
+}
+
+@keyframes eyeReveal {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.9) rotate(-6deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes eyeHide {
+  0% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0.6;
+    transform: scale(0.92) rotate(6deg);
+  }
+}
+
 .auth-input:focus {
   border-color: var(--border-focus);
   box-shadow: 0 0 0 4px var(--accent-gold-glow);

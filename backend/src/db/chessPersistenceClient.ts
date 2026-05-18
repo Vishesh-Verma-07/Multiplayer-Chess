@@ -7,7 +7,6 @@ import type {
 
 const PERSISTENCE_BACKEND_URL =
   process.env.HTTPS_BACKEND_URL ??
-  process.env.PERSISTENCE_BACKEND_URL ??
   "http://localhost:8000";
 
 const requestJson = async <T>(

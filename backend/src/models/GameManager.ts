@@ -1,15 +1,8 @@
 import { WebSocket } from "ws";
-import { getActivePersistedGameForUser } from "../db/chessPersistenceClient";
 import type { AuthenticatedSocket } from "../types/auth";
-import {
-  DRAW_REQUEST,
-  DRAW_RESPONSE,
-  INIT_GAME,
-  INVALID_MOVE,
-  MOVE,
-  RESIGN,
-} from "../utils/messages";
+import { INVALID_MOVE } from "../utils/messages";
 import { Game } from "./Game";
+import { handleSocketMessage, resumeUserGame } from "./gameManager/handlers";
 
 //todo user, class game class
 
@@ -27,7 +20,7 @@ export class GameManager {
   addUser(socket: AuthenticatedSocket) {
     this.users.push(socket);
     this.addHandler(socket);
-    void this.resumeUserGame(socket);
+    void resumeUserGame(this.getContext(), socket);
   }
 
   removerUser(socket: AuthenticatedSocket) {
@@ -88,158 +81,24 @@ export class GameManager {
     return false;
   }
 
-  private async resumeUserGame(socket: AuthenticatedSocket) {
-    try {
-      const activeGame = await getActivePersistedGameForUser(socket.user.id);
-      if (
-        !activeGame ||
-        !activeGame.whitePlayerId ||
-        !activeGame.blackPlayerId
-      ) {
-        return;
-      }
-
-      let game = this.gamesById.get(activeGame.gameId);
-      if (!game) {
-        game = Game.fromPersisted(activeGame);
-        this.gamesById.set(activeGame.gameId, game);
-      }
-
-      game.attachPlayer(socket);
-
-      const opponentSocket = game.getOpponentSocket(socket);
-      if (
-        opponentSocket &&
-        opponentSocket.readyState === WebSocket.OPEN &&
-        game.hasBothPlayersConnected()
-      ) {
-        opponentSocket.send(
-          JSON.stringify({
-            type: INVALID_MOVE,
-            payload: {
-              message: `${socket.user.username} reconnected. Match resumed.`,
-            },
-          }),
-        );
-      }
-    } catch (error) {
-      console.error("Failed to resume game for user:", error);
-    }
-  }
-
   private addHandler(socket: AuthenticatedSocket) {
     socket.on("message", (data) => {
-      const message = JSON.parse(data.toString());
-
-      if (message.type == INIT_GAME) {
-        const existingGame = this.findGameBySocket(socket);
-        if (existingGame) {
-          this.sendInvalidMove(socket, "You are already in an active match.");
-          return;
-        }
-
-        if (this.hasInMemoryGameForUser(socket.user.id)) {
-          this.sendInvalidMove(
-            socket,
-            "Reconnected to your active match. Continue from current board.",
-          );
-          return;
-        }
-
-        if (this.pendingUser) {
-          if (this.pendingUser === socket) {
-            this.sendInvalidMove(socket, "Already searching for an opponent.");
-            return;
-          }
-
-          if (
-            this.pendingUser.readyState !== WebSocket.OPEN ||
-            this.pendingUser.user.id === socket.user.id
-          ) {
-            this.pendingUser = socket;
-            return;
-          }
-
-          //start the game
-          const waitingUser = this.pendingUser;
-          this.pendingUser = null;
-
-          void Game.create(waitingUser, socket)
-            .then((game) => {
-              this.gamesById.set(game.gameId, game);
-            })
-            .catch((error) => {
-              console.error("Failed to create persisted chess game:", error);
-
-              if (!this.pendingUser) {
-                this.pendingUser = waitingUser;
-              }
-
-              const messageText =
-                "Unable to start the match right now. Please try again.";
-
-              if (this.pendingUser?.readyState === WebSocket.OPEN) {
-                this.sendInvalidMove(this.pendingUser, messageText);
-              }
-
-              this.sendInvalidMove(socket, messageText);
-            });
-        } else {
-          this.pendingUser = socket;
-        }
-      }
-
-      if (message.type == MOVE) {
-        const game = this.findGameBySocket(socket);
-
-        if (game) {
-          game.makeMove(socket, message.payload.move);
-        } else {
-          this.sendInvalidMove(
-            socket,
-            "No active game found for this connection. Reconnect to resume.",
-          );
-        }
-      }
-
-      if (message.type === RESIGN) {
-        const game = this.findGameBySocket(socket);
-
-        if (game) {
-          game.resign(socket);
-        } else {
-          this.sendInvalidMove(
-            socket,
-            "No active game found for this connection. Reconnect to resume.",
-          );
-        }
-      }
-
-      if (message.type === DRAW_REQUEST) {
-        const game = this.findGameBySocket(socket);
-
-        if (game) {
-          game.requestDraw(socket);
-        } else {
-          this.sendInvalidMove(
-            socket,
-            "No active game found for this connection. Reconnect to resume.",
-          );
-        }
-      }
-
-      if (message.type === DRAW_RESPONSE) {
-        const game = this.findGameBySocket(socket);
-
-        if (game) {
-          game.respondDraw(socket, Boolean(message.payload?.accepted));
-        } else {
-          this.sendInvalidMove(
-            socket,
-            "No active game found for this connection. Reconnect to resume.",
-          );
-        }
-      }
+      handleSocketMessage(this.getContext(), socket, data.toString());
     });
+  }
+
+  private getContext() {
+    return {
+      gamesById: this.gamesById,
+      getPendingUser: () => this.pendingUser,
+      setPendingUser: (user: AuthenticatedSocket | null) => {
+        this.pendingUser = user;
+      },
+      findGameBySocket: (socket: WebSocket) => this.findGameBySocket(socket),
+      hasInMemoryGameForUser: (userId: string) =>
+        this.hasInMemoryGameForUser(userId),
+      sendInvalidMove: (socket: AuthenticatedSocket, reason: string) =>
+        this.sendInvalidMove(socket, reason),
+    };
   }
 }

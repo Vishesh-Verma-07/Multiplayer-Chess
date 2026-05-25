@@ -13,7 +13,7 @@ export type ChessBoardProps = {
   setBoard: Dispatch<SetStateAction<ChessBoardState>>;
   chess: Chess;
   board: ChessBoardState;
-  socket: WebSocket;
+  socket?: WebSocket;
   canMove: boolean;
   onIllegalMove: (message: string) => void;
   orientation?: "white" | "black";

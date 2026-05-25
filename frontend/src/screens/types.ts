@@ -6,6 +6,8 @@ export type IncomingMessage = {
   type: string;
   payload?: {
     color?: PlayerColor;
+    spectator?: boolean;
+    gameId?: string;
     winner?: PlayerColor | null;
     reason?: "checkmate" | "draw" | "resign";
     fromColor?: PlayerColor;

@@ -61,3 +61,14 @@ export const getActivePersistedGameForUser = async (
 
   return response.game;
 };
+
+export const getActivePersistedGameById = async (
+  gameId: string,
+): Promise<ActivePersistedGame | null> => {
+  const response = await requestJson<{ game: ActivePersistedGame | null }>(
+    `/api/games/active/game/${gameId}`,
+    "GET",
+  );
+
+  return response.game;
+};

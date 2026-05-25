@@ -1,0 +1,99 @@
+.spectate-game {
+  min-height: 100vh;
+  padding: 2rem 1.5rem 4rem;
+  color: #f8fafc;
+  background: radial-gradient(circle at 20% 10%, rgba(251, 191, 36, 0.18), transparent 45%),
+    radial-gradient(circle at 80% 70%, rgba(14, 165, 233, 0.12), transparent 55%),
+    linear-gradient(180deg, #080808 0%, #0c0c0c 100%);
+}
+
+.spectate-header {
+  max-width: 1200px;
+  margin: 0 auto 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid rgba(71, 85, 105, 0.6);
+  background: rgba(2, 6, 23, 0.75);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.spectate-eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+  font-size: 0.7rem;
+  color: rgba(251, 191, 36, 0.9);
+}
+
+.spectate-title {
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  margin-top: 0.6rem;
+}
+
+.spectate-subtitle {
+  margin-top: 0.5rem;
+  color: rgba(226, 232, 240, 0.7);
+}
+
+.spectate-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.spectate-btn {
+  border: 1px solid rgba(251, 191, 36, 0.6);
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.spectate-btn:hover {
+  transform: translateY(-2px);
+  background: rgba(251, 191, 36, 0.2);
+}
+
+.spectate-banner {
+  max-width: 1200px;
+  margin: 0 auto 1.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: rgba(59, 130, 246, 0.1);
+  color: rgba(219, 234, 254, 0.9);
+}
+
+.spectate-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.spectate-board {
+  border-radius: 1.5rem;
+  border: 1px solid rgba(71, 85, 105, 0.6);
+  background: rgba(2, 6, 23, 0.75);
+  padding: 1.25rem;
+}
+
+.spectate-board-inner {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+@media (min-width: 1100px) {
+  .spectate-grid {
+    grid-template-columns: minmax(0, 1fr) 360px;
+  }
+}

@@ -8,11 +8,32 @@ type InitPayload = {
   resumed: boolean;
 };
 
+type SpectatorInitPayload = {
+  gameId: string;
+  fen: string;
+};
+
 export const sendInit = (socket: WebSocket, payload: InitPayload) => {
   socket.send(
     JSON.stringify({
       type: INIT_GAME,
       payload,
+    }),
+  );
+};
+
+export const sendSpectatorInit = (
+  socket: WebSocket,
+  payload: SpectatorInitPayload,
+) => {
+  socket.send(
+    JSON.stringify({
+      type: INIT_GAME,
+      payload: {
+        ...payload,
+        spectator: true,
+        resumed: true,
+      },
     }),
   );
 };

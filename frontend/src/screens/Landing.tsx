@@ -30,6 +30,14 @@ export const Landing = () => {
             >
               Start A Match
             </button>
+            <button
+              className="btn-glass"
+              type="button"
+              onClick={() => navigate("/spectate")}
+              style={{ backgroundColor: '#050505', color: '#e2e8f0', borderColor: '#64748b' }}
+            >
+              Spectate Live
+            </button>
           </div>
         </div>
       </section>

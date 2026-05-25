@@ -19,6 +19,26 @@ export const registerGameConnectionHandlers = (
   });
 };
 
+export const registerSpectatorConnectionHandlers = (
+  wss: WebSocketServer,
+  gameManager: GameManager,
+) => {
+  wss.on("connection", (ws, req) => {
+    const host = req.headers.host ?? "localhost";
+    const parsedUrl = new URL(req.url ?? "/", `http://${host}`);
+    const gameId = parsedUrl.searchParams.get("gameId");
+
+    if (!gameId) {
+      ws.close(1008, "gameId is required.");
+      return;
+    }
+
+    void gameManager.addSpectator(ws, gameId);
+
+    ws.on("close", () => gameManager.removeSpectator(ws));
+  });
+};
+
 export const registerAliveConnectionHandlers = (wss: WebSocketServer) => {
   wss.on("connection", (ws) => {
     ws.send(

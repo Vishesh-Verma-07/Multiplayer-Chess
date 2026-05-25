@@ -3,6 +3,7 @@ import { WebSocket } from "ws";
 import { createPersistedGame } from "../db/chessPersistenceClient";
 import {
   broadcastToPlayers,
+  sendSpectatorInit,
   sendInit,
   sendInvalidMove,
 } from "./game/gameMessaging";
@@ -27,6 +28,7 @@ export class Game {
   private moves: number;
   private finished: boolean;
   private pendingDrawOfferFrom: "white" | "black" | null;
+  private spectators: Set<WebSocket>;
 
   //make the players as types
 
@@ -59,6 +61,7 @@ export class Game {
     this.moves = moves ?? 0;
     this.finished = false;
     this.pendingDrawOfferFrom = null;
+    this.spectators = new Set();
   }
 
   static fromPersisted(activeGame: ActivePersistedGame) {
@@ -93,6 +96,14 @@ export class Game {
     return Boolean(this.player1 || this.player2);
   }
 
+  hasConnectedSpectators() {
+    return this.spectators.size > 0;
+  }
+
+  hasSpectator(socket: WebSocket) {
+    return this.spectators.has(socket);
+  }
+
   hasBothPlayersConnected() {
     return Boolean(this.player1 && this.player2);
   }
@@ -121,6 +132,18 @@ export class Game {
     }
 
     throw new Error("User is not part of this game.");
+  }
+
+  addSpectator(socket: WebSocket) {
+    this.spectators.add(socket);
+    sendSpectatorInit(socket, {
+      gameId: this.gameId,
+      fen: this.board.fen(),
+    });
+  }
+
+  removeSpectator(socket: WebSocket) {
+    this.spectators.delete(socket);
   }
 
   detachPlayerSocket(socket: WebSocket) {
@@ -261,10 +284,21 @@ export class Game {
             : "white",
         reason: this.board.isDraw() ? "draw" : "checkmate",
       });
+      this.broadcastToSpectators(GAME_OVER, {
+        winner: this.board.isDraw()
+          ? null
+          : this.board.turn() === "w"
+            ? "black"
+            : "white",
+        reason: this.board.isDraw() ? "draw" : "checkmate",
+      });
       return;
     }
 
     broadcastToPlayers(this.player1, this.player2, MOVE, {
+      move,
+    });
+    this.broadcastToSpectators(MOVE, {
       move,
     });
 
@@ -300,6 +334,10 @@ export class Game {
     });
 
     broadcastToPlayers(this.player1, this.player2, GAME_OVER, {
+      winner: winnerColor,
+      reason: "resign",
+    });
+    this.broadcastToSpectators(GAME_OVER, {
       winner: winnerColor,
       reason: "resign",
     });
@@ -393,6 +431,11 @@ export class Game {
         reason: "draw",
       });
 
+      this.broadcastToSpectators(GAME_OVER, {
+        winner: null,
+        reason: "draw",
+      });
+
       return;
     }
 
@@ -415,5 +458,15 @@ export class Game {
         },
       }),
     );
+  }
+
+  private broadcastToSpectators(type: string, payload: unknown) {
+    const message = JSON.stringify({ type, payload });
+
+    for (const spectator of this.spectators) {
+      if (spectator.readyState === WebSocket.OPEN) {
+        spectator.send(message);
+      }
+    }
   }
 }

@@ -3,6 +3,7 @@ import { WebSocketServer } from "ws";
 import {
   registerAliveConnectionHandlers,
   registerGameConnectionHandlers,
+  registerSpectatorConnectionHandlers,
 } from "../controllers/wsController";
 import { verifyAuthToken } from "../middleware/auth";
 import type { GameManager } from "../models/GameManager";
@@ -17,9 +18,11 @@ export const registerWebSocketRoutes = (
   { port, gameManager }: WsRouteOptions,
 ) => {
   const gameWss = new WebSocketServer({ noServer: true });
+  const spectatorWss = new WebSocketServer({ noServer: true });
   const aliveWss = new WebSocketServer({ noServer: true });
 
   registerGameConnectionHandlers(gameWss, gameManager);
+  registerSpectatorConnectionHandlers(spectatorWss, gameManager);
   registerAliveConnectionHandlers(aliveWss);
 
   server.on("upgrade", (req, socket, head) => {
@@ -30,6 +33,13 @@ export const registerWebSocketRoutes = (
     if (pathname === "/api/ws/alive") {
       aliveWss.handleUpgrade(req, socket, head, (ws) => {
         aliveWss.emit("connection", ws, req);
+      });
+      return;
+    }
+
+    if (pathname === "/api/ws/spectate") {
+      spectatorWss.handleUpgrade(req, socket, head, (ws) => {
+        spectatorWss.emit("connection", ws, req);
       });
       return;
     }

@@ -5,6 +5,8 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Auth } from "./screens/Auth";
 import { Game } from "./screens/Game";
 import { Landing } from "./screens/Landing";
+import { SpectateGame } from "./screens/SpectateGame";
+import { SpectateList } from "./screens/SpectateList";
 
 function App() {
   return (
@@ -14,6 +16,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/spectate" element={<SpectateList />} />
+            <Route path="/spectate/:gameId" element={<SpectateGame />} />
             <Route
               path="/game"
               element={

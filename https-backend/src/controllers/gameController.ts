@@ -3,6 +3,8 @@ import {
   createChessGame,
   finishChessGame,
   getActiveGameForUser,
+  getActiveGameById,
+  listActiveGames,
   saveBoardSnapshot,
 } from "../services/games/chessStore.js";
 import type {
@@ -28,6 +30,39 @@ export const getActiveGame = async (
   } catch (error) {
     console.error("Failed to fetch active chess game:", error);
     res.status(500).json({ error: "Failed to fetch active chess game." });
+  }
+};
+
+export const getActiveGameByIdHandler = async (
+  req: Request<{ gameId: string }>,
+  res: Response,
+) => {
+  const { gameId } = req.params;
+
+  if (!gameId) {
+    res.status(400).json({ error: "gameId is required." });
+    return;
+  }
+
+  try {
+    const game = await getActiveGameById(gameId);
+    res.status(200).json({ game });
+  } catch (error) {
+    console.error("Failed to fetch active game by id:", error);
+    res.status(500).json({ error: "Failed to fetch active game." });
+  }
+};
+
+export const getActiveGames = async (
+  _req: Request,
+  res: Response,
+) => {
+  try {
+    const games = await listActiveGames();
+    res.status(200).json({ games });
+  } catch (error) {
+    console.error("Failed to list active games:", error);
+    res.status(500).json({ error: "Failed to list active games." });
   }
 };
 

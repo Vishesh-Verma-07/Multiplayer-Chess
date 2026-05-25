@@ -72,6 +72,11 @@ export const ChessBoard = ({
       return;
     }
 
+    if (!socket) {
+      onIllegalMove("Connection not ready.");
+      return;
+    }
+
     socket.send(
       JSON.stringify({
         type: MOVE,

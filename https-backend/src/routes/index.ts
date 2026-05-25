@@ -18,6 +18,8 @@ router.get("/", (_req, res) => {
       "GET /api/auth/me",
       "POST /api/auth/logout",
       "GET /api/health",
+      "GET /api/games/active",
+      "GET /api/games/active/game/:gameId",
       "GET /api/games/active/:userId",
       "POST /api/games",
       "POST /api/games/:gameId/snapshots",

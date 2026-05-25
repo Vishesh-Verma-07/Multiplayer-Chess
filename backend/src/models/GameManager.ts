@@ -3,6 +3,7 @@ import type { AuthenticatedSocket } from "../types/auth";
 import { INVALID_MOVE } from "../utils/messages";
 import { Game } from "./Game";
 import { handleSocketMessage, resumeUserGame } from "./gameManager/handlers";
+import { getActivePersistedGameById } from "../db/chessPersistenceClient";
 
 //todo user, class game class
 
@@ -34,7 +35,11 @@ export class GameManager {
     if (game) {
       game.detachPlayerSocket(socket);
 
-      if (!game.isActive() && !game.hasConnectedPlayers()) {
+      if (
+        !game.isActive() &&
+        !game.hasConnectedPlayers() &&
+        !game.hasConnectedSpectators()
+      ) {
         this.gamesById.delete(game.gameId);
       }
     }
@@ -54,6 +59,16 @@ export class GameManager {
   private findAnyGameBySocket(socket: WebSocket) {
     for (const game of this.gamesById.values()) {
       if (game.hasSocket(socket)) {
+        return game;
+      }
+    }
+
+    return null;
+  }
+
+  private findGameBySpectator(socket: WebSocket) {
+    for (const game of this.gamesById.values()) {
+      if (game.hasSpectator(socket)) {
         return game;
       }
     }
@@ -85,6 +100,50 @@ export class GameManager {
     socket.on("message", (data) => {
       handleSocketMessage(this.getContext(), socket, data.toString());
     });
+  }
+
+  async addSpectator(socket: WebSocket, gameId: string) {
+    let game = this.gamesById.get(gameId);
+    if (!game) {
+      try {
+        const activeGame = await getActivePersistedGameById(gameId);
+        if (!activeGame) {
+          socket.close(1008, "Match not available for spectating.");
+          return;
+        }
+
+        game = Game.fromPersisted(activeGame);
+        this.gamesById.set(activeGame.gameId, game);
+      } catch (error) {
+        console.error("Failed to attach spectator:", error);
+        socket.close(1011, "Unable to load match.");
+        return;
+      }
+    }
+
+    if (!game.isActive()) {
+      socket.close(1008, "Match has already finished.");
+      return;
+    }
+
+    game.addSpectator(socket);
+  }
+
+  removeSpectator(socket: WebSocket) {
+    const game = this.findGameBySpectator(socket);
+    if (!game) {
+      return;
+    }
+
+    game.removeSpectator(socket);
+
+    if (
+      !game.isActive() &&
+      !game.hasConnectedPlayers() &&
+      !game.hasConnectedSpectators()
+    ) {
+      this.gamesById.delete(game.gameId);
+    }
   }
 
   private getContext() {

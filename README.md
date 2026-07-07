@@ -267,7 +267,7 @@ This project is licensed under the ISC License.
 
 ## Author
 
-Author information is not currently included in the repository.
+Vishesh Verma (@vishesh-verma-07)
 
 ## Acknowledgements
 

@@ -10,11 +10,11 @@ A full-stack chess application with authenticated gameplay, real-time WebSocket 
 
 - **Home Screen**
 
-  ![Gameplay interface](frontend\public\ss1.png)
+  ![Gameplay interface](frontend/public/ss1.png)
 
 - **Game Play**
 
-  ![Gameplay](frontend\public\ss2.png)
+  ![Gameplay](frontend/public/ss2.png)
 
 ## Features
 

@@ -70,6 +70,7 @@ export const login = async (
   req: Request<unknown, unknown, LoginBody>,
   res: Response,
 ) => {
+  console.log("req in login")
   const identifier = req.body.identifier?.trim().toLowerCase();
   const password = req.body.password;
 

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: https-backend
+  namespace: chessgame
+spec:
+  selector:
+    app: https-backend
+  ports:
+    - port: 8000
+      targetPort: 8000

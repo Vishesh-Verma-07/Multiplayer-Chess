@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: prisma-migrate
+  namespace: chessgame
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ghcr.io/vishesh-verma-07/multiplayer-chess/https-backend:latest
+          command: ["npx", "prisma", "db", "push"]
+          envFrom:
+            - secretRef:
+                name: https-backend-secrets
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - until pg_isready -h postgres -U chess -d chess; do sleep 2; done

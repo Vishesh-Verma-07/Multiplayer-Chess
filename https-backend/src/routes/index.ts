@@ -7,7 +7,11 @@ const router = Router();
 
 router.use("/health", healthRoutes);
 router.use("/auth", authRoutes);
+router.get("/auth", (req, res)=> {
+  res.json({message: "/auth"})
+});
 router.use("/games", gameRoutes);
+console.log("wer are in /rotes/index.ts")
 
 router.get("/", (_req, res) => {
   res.status(200).json({

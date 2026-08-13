@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: https-backend
+  namespace: chessgame
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: https-backend
+  template:
+    metadata:
+      labels:
+        app: https-backend
+    spec:
+      containers:
+        - name: https-backend
+          image: ghcr.io/vishesh-verma-07/multiplayer-chess/https-backend:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: https-backend-config
+            - secretRef:
+                name: https-backend-secrets
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

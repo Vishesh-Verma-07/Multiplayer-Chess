@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: https-backend-config
+  namespace: chessgame
+data:
+  NODE_ENV: "production"
+  PORT: "8000"
+  FRONTEND_ORIGIN: "https://chess.visheshxdevs.in"

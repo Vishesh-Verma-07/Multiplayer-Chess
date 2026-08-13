@@ -11,7 +11,6 @@ export const ChessBoard = ({
   canMove,
   onIllegalMove,
   orientation = "white",
-  onMoveExecuted,
 }: ChessBoardProps) => {
   const [from, setFrom] = useState<Square | null>(null);
 
@@ -22,7 +21,7 @@ export const ChessBoard = ({
 
     const verboseMoves = chess.moves({ square: from, verbose: true }) as Move[];
     return verboseMoves.map((move) => move.to as Square);
-  }, [chess, from, board]);
+  }, [chess, from]);
 
   const handleSquareClick = (squareRepresentation: Square) => {
     if (!canMove) {
@@ -30,19 +29,22 @@ export const ChessBoard = ({
       return;
     }
 
-    if (!from) {
-      const selectedPiece = chess.get(squareRepresentation);
-      if (!selectedPiece || selectedPiece.color !== chess.turn()) {
-        onIllegalMove("Select one of your own pieces.");
-        return;
-      }
+    if (from === squareRepresentation) {
+      setFrom(null);
+      onIllegalMove("");
+      return;
+    }
+
+    const clickedPiece = chess.get(squareRepresentation);
+
+    if (clickedPiece && clickedPiece.color === chess.turn()) {
       setFrom(squareRepresentation);
       onIllegalMove("");
       return;
     }
 
-    if (from === squareRepresentation) {
-      setFrom(null);
+    if (!from) {
+      onIllegalMove("Select one of your own pieces.");
       return;
     }
 
@@ -89,7 +91,6 @@ export const ChessBoard = ({
     setBoard(chess.board());
     setFrom(null);
     onIllegalMove("");
-    onMoveExecuted?.();
   };
 
   return (

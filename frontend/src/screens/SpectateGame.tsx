@@ -88,10 +88,10 @@ export const SpectateGame = () => {
     };
   }, [socket, chess]);
 
-  const moveHistory = useMemo(() => chess.history(), [board, chess]);
+  const moveHistory = useMemo(() => chess.history(), [chess]);
   const verboseMoveHistory = useMemo(
     () => chess.history({ verbose: true }) as Move[],
-    [board, chess],
+    [chess],
   );
 
   const capturedPieces = useMemo(

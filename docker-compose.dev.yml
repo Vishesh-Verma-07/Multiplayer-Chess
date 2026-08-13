@@ -1,0 +1,113 @@
+# Local development stack with hot reload.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up          # start everything
+#   docker compose -f docker-compose.dev.yml run --rm migrate   # re-run schema sync after editing prisma/schema.prisma
+#   docker compose -f docker-compose.dev.yml down        # stop (keeps db data + node_modules)
+#
+# Source code is bind-mounted and each Node service runs its compiler/dev
+# server in watch mode, so code edits are picked up automatically — no
+# rebuilds, no `up` on every change.
+#
+# node_modules live in named volumes (a Windows install would break the
+# Linux containers, e.g. Prisma engines). The first `up` runs `npm ci`
+# inside the container; later starts reuse the volume. After adding a
+# dependency run: docker compose -f docker-compose.dev.yml exec <svc> npm install <pkg>
+#
+# The db service reuses the same `db_data` volume as docker-compose.yml,
+# so production-mode and dev-mode containers share one local database.
+# Stop your local Postgres (or change the port) if 5432 is taken.
+#
+# Hot reload uses polling watchers (tsc --watchFile FixedPollingInterval,
+# nodemon -L, CHOKIDAR_USEPOLLING) because inotify events are not reliably
+# delivered to containers on Docker Desktop for Windows. Slight CPU cost,
+# reliable restarts everywhere.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: chess
+      POSTGRES_PASSWORD: chess
+      POSTGRES_DB: chess
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chess -d chess"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./https-backend:/app
+      - node_modules_https_backend:/app/node_modules
+    environment:
+      DATABASE_URL: postgres://chess:chess@db:5432/chess
+    command: sh -c "test -f node_modules/.package-lock.json || npm ci; npx prisma db push"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  https-backend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./https-backend:/app
+      - node_modules_https_backend:/app/node_modules
+    ports:
+      - "8000:8000"
+    environment:
+      NODE_ENV: development
+      PORT: "8000"
+      DATABASE_URL: postgres://chess:chess@db:5432/chess
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:-dev-only-secret-change-me}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:5173}
+    command: sh -c "test -f node_modules/.package-lock.json || npm ci; npx prisma generate; npx tsc -b && (npx tsc -b --watch --watchFile FixedPollingInterval --watchDirectory fixedpollinginterval & npx nodemon -L --watch dist --ext js dist/index.js)"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  backend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+      - node_modules_backend:/app/node_modules
+    ports:
+      - "8080:8080"
+    environment:
+      NODE_ENV: development
+      PORT: "8080"
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET:-dev-only-secret-change-me}
+      HTTPS_BACKEND_URL: http://https-backend:8000
+    command: sh -c "test -f node_modules/.package-lock.json || npm ci; npx tsc -b && (npx tsc -b --watch --watchFile FixedPollingInterval --watchDirectory fixedpollinginterval & npx nodemon -L --watch dist --ext js dist/index.js)"
+    depends_on:
+      https-backend:
+        condition: service_started
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - node_modules_frontend:/app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      NODE_ENV: development
+      CHOKIDAR_USEPOLLING: "true"
+    command: sh -c "test -f node_modules/.package-lock.json || npm ci; npm run dev -- --host 0.0.0.0"
+    depends_on:
+      - https-backend
+      - backend
+
+volumes:
+  db_data:
+  node_modules_https_backend:
+  node_modules_backend:
+  node_modules_frontend:

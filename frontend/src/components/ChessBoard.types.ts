@@ -17,5 +17,4 @@ export type ChessBoardProps = {
   canMove: boolean;
   onIllegalMove: (message: string) => void;
   orientation?: "white" | "black";
-  onMoveExecuted?: () => void;
 };

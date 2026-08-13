@@ -14,13 +14,14 @@ const AboutChess = () => {
   const gridRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const grid = gridRef.current;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
           setIsVisible(true);
           // Stop observing once visible
-          if (gridRef.current) {
-            observer.unobserve(gridRef.current);
+          if (grid) {
+            observer.unobserve(grid);
           }
         }
       },
@@ -31,13 +32,13 @@ const AboutChess = () => {
       }
     );
 
-    if (gridRef.current) {
-      observer.observe(gridRef.current);
+    if (grid) {
+      observer.observe(grid);
     }
 
     return () => {
-      if (gridRef.current) {
-        observer.unobserve(gridRef.current);
+      if (grid) {
+        observer.unobserve(grid);
       }
     };
   }, []);

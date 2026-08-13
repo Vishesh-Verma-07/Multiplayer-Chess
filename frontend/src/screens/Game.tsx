@@ -175,10 +175,10 @@ export const Game = () => {
     };
   }, [socket, chess, playMoveSound, playerColor]);
 
-  const moveHistory = useMemo(() => chess.history(), [board, chess]);
+  const moveHistory = useMemo(() => chess.history(), [chess]);
   const verboseMoveHistory = useMemo(
     () => chess.history({ verbose: true }) as Move[],
-    [board, chess],
+    [chess],
   );
 
   const capturedPieces = useMemo(
@@ -359,7 +359,6 @@ export const Game = () => {
                 canMove={gameStarted && !gameOverWinner && isMyTurn}
                 onIllegalMove={(message) => setLastError(message)}
                 orientation={playerColor ?? "white"}
-                onMoveExecuted={playMoveSound}
               />
             </div>
           </div>

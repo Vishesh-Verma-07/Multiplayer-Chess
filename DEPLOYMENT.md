@@ -25,6 +25,21 @@ cd backend && npm run dev         # WebSocket server on :8080
 cd frontend && npm run dev        # Vite UI on :5173
 ```
 
+Or run the whole stack with hot reload in containers (source is bind-mounted, watchers are polling-based so restarts work on Docker Desktop for Windows):
+
+```bash
+docker compose -f docker-compose.dev.yml up     # db, migrate, API, WS server, Vite UI
+docker compose -f docker-compose.dev.yml run --rm migrate   # re-sync schema after editing prisma/schema.prisma
+docker compose -f docker-compose.dev.yml down   # stop; db data + node_modules volumes persist
+```
+
+- Frontend: http://localhost:5173 (Vite dev server, HMR)
+- HTTP API: http://localhost:8000/api/health
+- WebSocket: ws://localhost:8080/api/ws
+- Ports match the production compose, so the same `backend/.env` / `https-backend/.env` / `frontend/.env` files work.
+- node_modules live in named volumes; the first `up` runs `npm ci` in-container. After adding a dependency: `docker compose -f docker-compose.dev.yml exec <service> npm install <pkg>`.
+- The `db` service binds 5432 — stop a local Postgres first if the port is taken.
+
 Postgres: local install or `docker run -p 5432:5432 -e POSTGRES_USER=chess -e POSTGRES_PASSWORD=chess -e POSTGRES_DB=chess postgres:16-alpine`.
 
 Env files (never committed):

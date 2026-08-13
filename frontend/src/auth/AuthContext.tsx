@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
   TOKEN_STORAGE_KEY,
   getCurrentUser,
@@ -46,27 +46,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     hydrate();
   }, [token]);
 
-  const saveSession = (nextToken: string, nextUser: AuthUser) => {
-    localStorage.setItem(TOKEN_STORAGE_KEY, nextToken);
-    setToken(nextToken);
-    setUser(nextUser);
-  };
+  const saveSession = useCallback(
+    (nextToken: string, nextUser: AuthUser) => {
+      localStorage.setItem(TOKEN_STORAGE_KEY, nextToken);
+      setToken(nextToken);
+      setUser(nextUser);
+    },
+    [],
+  );
 
-  const login = async (identifier: string, password: string) => {
-    const response = await loginUser({ identifier, password });
-    saveSession(response.token, response.user);
-  };
+  const login = useCallback(
+    async (identifier: string, password: string) => {
+      const response = await loginUser({ identifier, password });
+      saveSession(response.token, response.user);
+    },
+    [saveSession],
+  );
 
-  const register = async (
-    username: string,
-    email: string,
-    password: string,
-  ) => {
-    const response = await registerUser({ username, email, password });
-    saveSession(response.token, response.user);
-  };
+  const register = useCallback(
+    async (
+      username: string,
+      email: string,
+      password: string,
+    ) => {
+      const response = await registerUser({ username, email, password });
+      saveSession(response.token, response.user);
+    },
+    [saveSession],
+  );
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     const currentToken = token;
     localStorage.removeItem(TOKEN_STORAGE_KEY);
     setToken(null);
@@ -75,7 +84,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (currentToken) {
       await logoutUser(currentToken);
     }
-  };
+  }, [token]);
 
   const value = useMemo(
     () => ({
@@ -87,12 +96,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       register,
       logout,
     }),
-    [user, token, loading],
+    [user, token, loading, login, register, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = (): AuthContextValue => {
   const context = useContext(AuthContext);
 

@@ -5,16 +5,18 @@ export const TOKEN_STORAGE_KEY = "chess_auth_token";
 const HTTPS_BACKEND_URL =
   import.meta.env.VITE_HTTPS_BACKEND_URL ?? "http://localhost:8000";
 
-const assertJsonResponse = async (response: Response): Promise<any> => {
-  const data = await response
+const assertJsonResponse = async <T>(response: Response): Promise<T> => {
+  const data: unknown = await response
     .json()
     .catch(() => ({ error: "Invalid JSON response." }));
 
   if (!response.ok) {
-    throw new Error(data.error ?? "Request failed.");
+    throw new Error(
+      (data as { error?: string }).error ?? "Request failed.",
+    );
   }
 
-  return data;
+  return data as T;
 };
 
 export const registerUser = async (payload: {
@@ -30,7 +32,7 @@ export const registerUser = async (payload: {
     body: JSON.stringify(payload),
   });
 
-  return assertJsonResponse(response);
+  return assertJsonResponse<AuthSuccessResponse>(response);
 };
 
 export const loginUser = async (payload: {
@@ -57,7 +59,7 @@ export const getCurrentUser = async (
     },
   });
 
-  return assertJsonResponse(response);
+  return assertJsonResponse<{ user: AuthUser }>(response);
 };
 
 export const logoutUser = async (token: string): Promise<void> => {

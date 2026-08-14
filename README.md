@@ -1,6 +1,6 @@
 # Real-Time Multiplayer Chess
 
-A full-stack chess application with authenticated gameplay, real-time WebSocket moves, live spectating, and persisted game state. The project is split into a React frontend, a WebSocket game server, and an Express/Prisma API for authentication and chess game persistence.
+A full-stack chess application with authenticated gameplay, real-time WebSocket move synchronization, live spectating, and persisted game state. The project is split into a React frontend, a WebSocket game server, and an Express/Prisma API for authentication and chess game persistence — with Docker Compose and Kubernetes deployment support.
 
 ## Demo
 
@@ -10,7 +10,7 @@ A full-stack chess application with authenticated gameplay, real-time WebSocket 
 
 - **Home Screen**
 
-  ![Gameplay interface](frontend/public/ss1.png)
+  ![Home screen](frontend/public/ss1.png)
 
 - **Game Play**
 
@@ -26,7 +26,11 @@ A full-stack chess application with authenticated gameplay, real-time WebSocket 
 - Move validation and board state management with `chess.js`
 - Game persistence with PostgreSQL and Prisma models for users, games, moves, and board snapshots
 - Game actions for resignation, draw requests, draw responses, invalid moves, and game-over events
+- Move sound effects during gameplay
 - Basic health endpoints for backend services
+- Containerized local development with hot reload (`docker-compose.dev.yml`)
+- Production Docker Compose stack with an nginx-served frontend
+- Kubernetes manifests and a GitHub Actions CI pipeline
 
 ## Tech Stack
 
@@ -35,7 +39,8 @@ A full-stack chess application with authenticated gameplay, real-time WebSocket 
 - **WebSocket Backend:** Node.js, TypeScript, `ws`, JWT
 - **HTTP Backend:** Express 5, TypeScript, Prisma, PostgreSQL
 - **Authentication:** JWT, bcryptjs
-- **Tooling:** ESLint, TypeScript project builds, Vercel frontend config
+- **Database:** PostgreSQL 16
+- **DevOps:** Docker, Docker Compose, Kubernetes, GitHub Actions, GHCR
 
 ## Architecture
 
@@ -48,44 +53,51 @@ flowchart LR
   API -->|Prisma Client| DB[(PostgreSQL)]
 ```
 
+The `backend` (WebSocket) and `https-backend` (API) are separate processes that share the same `AUTH_JWT_SECRET` for verifying player tokens.
+
 ## Project Structure
 
 ```text
 chessGame/
-|-- backend/                # WebSocket chess server
-|   |-- src/
-|   |   |-- controllers/    # WebSocket and health handlers
-|   |   |-- db/             # Persistence API client
-|   |   |-- middleware/     # JWT verification for sockets
-|   |   |-- models/         # Game and game manager logic
-|   |   |-- routes/         # HTTP and WebSocket route registration
-|   |   |-- types/          # Shared backend types
-|   |   `-- utils/          # Message constants
-|   `-- package.json
-|-- frontend/               # React client application
-|   |-- public/             # Chess piece and page assets
-|   |-- src/
-|   |   |-- api/            # REST API clients
-|   |   |-- auth/           # Auth context and client
-|   |   |-- components/     # Reusable UI and game components
-|   |   |-- hooks/          # WebSocket and sound hooks
-|   |   `-- screens/        # App pages
-|   `-- package.json
-`-- https-backend/          # Express API, auth, and persistence service
-    |-- prisma/
-    |   `-- schema.prisma
-    |-- src/
-    |   |-- config/         # Environment config
-    |   |-- controllers/    # Auth, game, and health controllers
-    |   |-- db/             # Prisma client setup
-    |   |-- middleware/     # HTTP auth middleware
-    |   |-- routes/         # API routes
-    |   |-- services/       # Auth, user, and chess persistence logic
-    |   `-- types/          # API and domain types
-    `-- package.json
+├── frontend/                 # React client application
+│   ├── public/               # Chess piece assets, sounds, screenshots
+│   └── src/
+│       ├── api/              # REST API clients
+│       ├── auth/             # Auth context and client
+│       ├── components/       # Reusable UI and game components
+│       ├── hooks/            # WebSocket and sound hooks
+│       └── screens/          # App pages (Landing, Game, Spectate, Auth)
+├── backend/                  # WebSocket chess server
+│   └── src/
+│       ├── controllers/      # WebSocket and health handlers
+│       ├── db/               # Persistence API client
+│       ├── middleware/       # JWT verification for sockets
+│       ├── models/           # Game and game manager logic
+│       ├── routes/           # HTTP and WebSocket route registration
+│       ├── types/            # Shared backend types
+│       └── utils/            # Message constants
+├── https-backend/            # Express API, auth, and persistence service
+│   ├── prisma/
+│   │   └── schema.prisma     # PostgreSQL data model
+│   └── src/
+│       ├── config/           # Environment config
+│       ├── controllers/      # Auth, game, and health controllers
+│       ├── db/               # Prisma client setup
+│       ├── middleware/       # HTTP auth middleware
+│       ├── routes/           # API routes
+│       ├── services/         # Auth, user, and chess persistence logic
+│       └── types/            # API and domain types
+├── kubernetes/               # K8s manifests (namespace, ingress, deployments, Postgres)
+├── .github/workflows/        # CI pipeline
+├── docker-compose.yml        # Production-mode stack
+├── docker-compose.dev.yml    # Dev stack with hot reload
+├── DEPLOYMENT.md             # Full deployment runbook
+└── .env.example              # Root environment template
 ```
 
 ## Installation
+
+### Option 1 — Local development (from source)
 
 1. Clone the repository.
 
@@ -116,31 +128,68 @@ cp .env.example .env
 
 Update the `.env` files for your local ports, JWT secret, API URLs, and database connection.
 
+4. Sync the database schema (no migration files exist yet — `db push` syncs the schema).
+
+```bash
+cd ../https-backend
+npx prisma db push
+```
+
+### Option 2 — Docker Compose (full local stack)
+
+```bash
+cp .env.example .env        # adjust AUTH_JWT_SECRET, URLs
+docker compose up --build   # starts db, migrate, https-backend, backend, frontend
+```
+
+- Frontend: http://localhost:3000 (nginx serving the built SPA)
+- HTTP API: http://localhost:8000/api/health
+- WebSocket: ws://localhost:8080/api/ws
+
+### Option 3 — Docker Compose (dev with hot reload)
+
+```bash
+docker compose -f docker-compose.dev.yml up   # db, migrate, API, WS server, Vite UI
+```
+
+The dev stack bind-mounts source code, uses polling watchers for reliable restarts on Docker Desktop for Windows, and serves the Vite UI at http://localhost:5173.
+
 ## Environment Variables
 
-### `https-backend`
+### Root (`.env`) — used by Docker Compose
 
-| Variable          | Description                                     | Default                 |
-| ----------------- | ----------------------------------------------- | ----------------------- |
-| `PORT`            | Port for the Express API server.                | `8000`                  |
-| `FRONTEND_ORIGIN` | Allowed CORS origin for the React app.          | `http://localhost:5173` |
+| Variable | Description | Default |
+|---|---|---|
+| `AUTH_JWT_SECRET` | Shared JWT secret (must match across both Node services) | `dev-only-secret-change-me` |
+| `FRONTEND_ORIGIN` | CORS origin allowed by the HTTP API | `http://localhost:3000` |
+| `VITE_HTTPS_BACKEND_URL` | API URL baked into the frontend build | `http://localhost:8000` |
+| `VITE_WEBSOCKET_BACKEND_URL` | WebSocket URL baked into the frontend build | `ws://localhost:8080/api/ws` |
+
+### `https-backend/.env`
+
+| Variable | Description | Default |
+|---|---|---|
+| `PORT` | Port for the Express API server. | `8000` |
+| `FRONTEND_ORIGIN` | Allowed CORS origin for the React app. | `http://localhost:5173` |
 | `AUTH_JWT_SECRET` | Secret used to sign and verify JWT auth tokens. | Required for production |
-| `DATABASE_URL`    | PostgreSQL connection string used by Prisma.    | Required                |
+| `DATABASE_URL` | PostgreSQL connection string used by Prisma. | Required |
 
-### `backend`
+### `backend/.env`
 
-| Variable            | Description                                                               | Default                     |
-| ------------------- | ------------------------------------------------------------------------- | --------------------------- |
-| `PORT`              | Port for the WebSocket chess server.                                      | `8080`                      |
-| `AUTH_JWT_SECRET`   | Secret used to verify player JWTs. Use the same value as `https-backend`. | `dev-only-secret-change-me` |
-| `HTTPS_BACKEND_URL` | URL of the Express persistence API.                                       | `http://localhost:8000`     |
+| Variable | Description | Default |
+|---|---|---|
+| `PORT` | Port for the WebSocket chess server. | `8080` |
+| `AUTH_JWT_SECRET` | Secret used to verify player JWTs. Use the same value as `https-backend`. | `dev-only-secret-change-me` |
+| `HTTPS_BACKEND_URL` | URL of the Express persistence API. | `http://localhost:8000` |
 
-### `frontend`
+### `frontend/.env`
 
-| Variable                     | Description                                                       | Default                 |
-| ---------------------------- | ----------------------------------------------------------------- | ----------------------- |
-| `VITE_HTTPS_BACKEND_URL`     | Base URL for the Express API.                                     | `http://localhost:8000` |
-| `VITE_WEBSOCKET_BACKEND_URL` | WebSocket URL for gameplay, usually `ws://localhost:8080/api/ws`. | Required                |
+| Variable | Description | Default |
+|---|---|---|
+| `VITE_HTTPS_BACKEND_URL` | Base URL for the Express API. | `http://localhost:8000` |
+| `VITE_WEBSOCKET_BACKEND_URL` | WebSocket URL for gameplay, usually `ws://localhost:8080/api/ws`. | Required |
+
+> Note: `VITE_*` values are baked into the frontend bundle at **build time** — changing them requires a rebuild.
 
 ## Usage
 
@@ -174,7 +223,37 @@ cd frontend
 npm run dev
 ```
 
-The Vite app runs on `http://localhost:5173` by default.
+The Vite app runs on `http://localhost:5173` by default. Register an account, log in, and start or join a game.
+
+## Automation
+
+### CI (GitHub Actions)
+
+`.github/workflows/ci.yml` runs on push/PR to `main`:
+
+- **https-backend:** `npm ci`, `prisma generate`, `npm run build`
+- **backend:** `npm ci`, `npm run build`
+- **frontend:** `npm ci`, `npm run lint`, `npm run build`
+
+### Database migrations
+
+Schema sync is handled automatically in Docker Compose by a `migrate` one-shot service that runs `prisma db push` before the API starts. In Kubernetes, a `prisma-migrate-job.yml` Job applies the schema after Postgres is up.
+
+### Kubernetes deployment
+
+The `kubernetes/` directory contains manifests for a full cluster deployment:
+
+```
+kubernetes/
+├── namespace.yml
+├── ingress.yml               # routes /api/ws → WS server, /api → API, / → frontend
+├── backend/                  # deployment, service, config, secret
+├── https-backend/            # deployment, service, config, secret
+├── frontend/                 # deployment, service
+└── infra/                    # postgres statefulset, service, prisma migrate job
+```
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the complete runbook covering Docker images, Kubernetes rollout/rollback, and the CI/CD workflow.
 
 ## Example Output
 
@@ -209,7 +288,8 @@ Example WebSocket heartbeat from `/api/ws/alive`:
 - `frontend/vite.config.ts` configures the Vite React app.
 - `frontend/vercel.json` contains deployment configuration for the frontend.
 - `https-backend/prisma/schema.prisma` defines the PostgreSQL data model.
-- `https-backend/.env.example` provides a starter environment file for the HTTP API.
+- `docker-compose.yml` / `docker-compose.dev.yml` define the production-mode and hot-reload stacks (Postgres on port `5433`, API on `8000`, WS on `8080`).
+- `kubernetes/ingress.yml` routes `/api/ws` (with WebSocket upgrade support) and `/api` to the respective backends.
 - Runtime URLs are configured through environment variables, so local and deployed services can point to different API and WebSocket hosts.
 
 ## APIs & External Services
@@ -237,17 +317,18 @@ Example WebSocket heartbeat from `/api/ws/alive`:
 
 ### External Services
 
-- PostgreSQL database for persisted users, chess games, moves, and board snapshots
+- PostgreSQL — persistent storage for users, chess games, moves, and board snapshots
+- GHCR — container images for the backend services
 - Vercel-compatible frontend deployment configuration
 
 ## Roadmap / Future Improvements
 
 - [ ] Add automated tests for gameplay, auth, and persistence flows
-- [ ] Add CI checks for linting and builds
-- [ ] Add production deployment documentation
-- [ ] Add screenshots or a hosted demo link
+- [ ] Add a CD workflow for automated image builds and deployments
 - [ ] Add player profiles and match history
 - [ ] Add time controls and game clocks
+- [ ] Add real Prisma migration files (`prisma migrate deploy` instead of `db push`)
+- [ ] Improve accessibility
 
 ## Contributing
 
@@ -267,7 +348,7 @@ This project is licensed under the ISC License.
 
 ## Author
 
-Vishesh Verma (@vishesh-verma-07)
+**Vishesh Verma** (@vishesh-verma-07)
 
 ## Acknowledgements
 

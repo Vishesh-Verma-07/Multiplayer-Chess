@@ -1,6 +1,6 @@
 # Real-Time Multiplayer Chess
 
-A full-stack chess application with authenticated gameplay, real-time WebSocket move synchronization, live spectating, and persisted game state. The project is split into a React frontend, a WebSocket game server, and an Express/Prisma API for authentication and chess game persistence — with Docker Compose and Kubernetes deployment support.
+A full-stack chess web app with authenticated gameplay, real-time WebSocket move synchronization, live spectating, and persisted game state. The project is split into a React frontend, a WebSocket game server, and an Express/Prisma API for authentication and chess game persistence — with Docker Compose and Kubernetes deployment support.
 
 ## Demo
 

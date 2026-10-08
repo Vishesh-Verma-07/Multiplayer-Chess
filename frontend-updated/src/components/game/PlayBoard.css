@@ -1,0 +1,26 @@
+/* The frame: a bezel with the coordinates set into it, so squares stay clean. */
+.pb { position: relative; padding: 14px 14px 32px 32px; border-radius: 18px; background: linear-gradient(150deg, #1d1f22 0%, #121315 55%, #17181a 100%); box-shadow: 0 0 0 1px rgba(244, 241, 234, 0.1), 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 60px 100px -40px #000, 0 20px 40px -20px rgba(0, 0, 0, 0.8); transition: box-shadow .5s var(--ease); }
+.pb:has(.is-my-turn) { box-shadow: 0 0 0 1px var(--accent-line), 0 1px 0 rgba(255, 255, 255, 0.07) inset, 0 0 60px -10px rgba(201, 169, 110, 0.22), 0 60px 100px -40px #000; }
+.pb__ranks, .pb__files { position: absolute; display: flex; font-family: var(--font-mono); font-size: 11px; color: var(--dim); pointer-events: none; }
+.pb__ranks { left: 0; width: 32px; top: 14px; bottom: 32px; flex-direction: column; }
+.pb__ranks span { flex: 1; display: grid; place-items: center; padding-right: 2px; }
+.pb__files { left: 32px; right: 14px; bottom: 0; height: 32px; }
+.pb__files span { flex: 1; display: grid; place-items: center; padding-top: 2px; }
+
+/* Board surface: the dark tonal theme (squares come from --sq-light / --sq-dark in tokens.css). */
+.playboard { touch-action: none; cursor: default; border-radius: 4px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 0, 0, 0.55) inset; overflow: hidden; }
+.playboard.is-my-turn { cursor: pointer; }
+.playboard.is-dragging { cursor: grabbing; }
+.playboard .board__piece { will-change: transform; }
+.playboard .board__piece.is-drag { filter: drop-shadow(0 16px 14px rgba(0, 0, 0, 0.6)); }
+.playboard .board__piece.is-drag .board__piece-in { transform: scale(1.16); animation: none; }
+.playboard__hover { box-shadow: inset 0 0 0 2px rgba(244, 241, 234, 0.18); }
+.playboard__promo { position: absolute; z-index: 8; width: 12.5%; display: grid; background: var(--surface-2); border: 1px solid var(--accent-line); border-radius: 8px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); overflow: hidden; animation: markIn .2s ease; }
+.playboard__promo button { aspect-ratio: 1; display: block; padding: 4%; transition: background .2s; }
+.playboard__promo button:hover, .playboard__promo button:focus-visible { background: var(--accent-soft); }
+
+@media (max-width: 520px) {
+  .pb { padding: 8px 8px 24px 22px; border-radius: 14px; }
+  .pb__ranks { width: 22px; top: 8px; bottom: 24px; font-size: 10px; }
+  .pb__files { left: 22px; right: 8px; height: 24px; font-size: 10px; }
+}

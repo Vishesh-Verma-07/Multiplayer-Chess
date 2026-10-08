@@ -1,0 +1,60 @@
+.board {
+  --rx: 0deg;
+  --ry: 0deg;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--sq-dark);
+  box-shadow: 0 0 0 1px var(--line-2), 0 40px 80px -30px rgba(0, 0, 0, 0.9), 0 12px 30px -12px rgba(0, 0, 0, 0.7);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.board--tilt {
+  transform: perspective(1400px) rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform 0.5s var(--ease);
+  will-change: transform;
+}
+.board__squares {
+  position: absolute;
+  inset: 0;
+  background:
+    conic-gradient(var(--sq-dark) 25%, var(--sq-light) 0 50%, var(--sq-dark) 0 75%, var(--sq-light) 0) 0 0 / 25% 25%;
+}
+.board__squares::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 40%, rgba(0, 0, 0, 0.25));
+}
+.board__mark, .board__target { position: absolute; width: 12.5%; height: 12.5%; pointer-events: none; }
+.board__mark--from { background: rgba(201, 169, 110, 0.16); }
+.board__mark--to { background: rgba(201, 169, 110, 0.32); box-shadow: inset 0 0 0 1px var(--accent-line); animation: markIn 0.5s var(--ease); }
+.board__mark--check { background: radial-gradient(circle, rgba(201, 105, 95, 0.55), transparent 70%); }
+.board__mark--sel { box-shadow: inset 0 0 0 2px var(--accent); }
+.board__mark--glow { box-shadow: inset 0 0 0 1.5px var(--accent); background: rgba(201, 169, 110, 0.12); }
+@keyframes markIn { from { opacity: 0; } }
+.board__target::after { content: ''; position: absolute; inset: 38%; border-radius: 50%; background: var(--accent); opacity: 0.8; }
+.board__target.is-capture::after { inset: 8%; background: none; border: 2px solid var(--accent); opacity: 0.8; }
+
+.board__piece {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 12.5%;
+  height: 12.5%;
+  transition: transform 0.7s var(--ease);
+  pointer-events: none;
+}
+.board__piece-in { display: block; width: 100%; height: 100%; animation: pieceIn 0.7s var(--ease) both; }
+.piece-svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
+.piece-svg.is-b { filter: drop-shadow(0 0 0.6px rgba(244, 241, 234, 0.7)) drop-shadow(0 2px 2px rgba(0, 0, 0, 0.5)); }
+@keyframes pieceIn { from { opacity: 0; transform: translateY(-14%) scale(0.9); } }
+
+.board__files, .board__ranks { position: absolute; display: flex; pointer-events: none; font-family: var(--font-mono); font-size: clamp(7px, 1.3vw, 10px); color: var(--dim); opacity: 0.85; }
+.board__files { left: 0; right: 0; bottom: 2px; }
+.board__files span { flex: 1; text-align: right; padding-right: 3%; }
+.board__ranks { top: 0; bottom: 0; left: 3px; flex-direction: column; }
+.board__ranks span { flex: 1; padding-top: 3%; }

@@ -1,5 +1,5 @@
 /** Placeholder product name: change here and in index.html. */
-export const BRAND = 'Tempo'
+export const BRAND = 'Circle to Square'
 /** The live game (requires sign-in). All "Play" CTAs lead here. */
 export const PLAY_URL = '/game'
 

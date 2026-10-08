@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   icons: { icon: '/favicon.svg' },
   openGraph: {
     type: 'website',
-    siteName: 'Tempo',
+    siteName: 'Circle to Square',
     title: 'Real-Time Multiplayer Chess | Play Live',
     description: 'Chess, built properly for real-time play. Server-validated moves, instant sync, reconnect and resume, live spectating.',
     url: SITE,
@@ -36,7 +36,7 @@ export const viewport: Viewport = { themeColor: '#0B0C0E', viewportFit: 'cover' 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebApplication',
-  name: 'Tempo',
+  name: 'Circle to Square',
   url: SITE,
   applicationCategory: 'GameApplication',
   operatingSystem: 'Any (web browser)',
